@@ -330,6 +330,12 @@ struct SettingsView: View {
               )
 
               StorageInfoRow(
+                icon: "photo.stack.fill",
+                title: "settings.storage.image_cache",
+                size: store.imageCacheSize
+              )
+
+              StorageInfoRow(
                 icon: "arrow.down.circle.fill",
                 title: "settings.storage.downloads",
                 size: store.downloadsSize
@@ -342,6 +348,15 @@ struct SettingsView: View {
                 isLoading: store.isClearingCache
               ) {
                 store.send(.clearCacheTapped)
+              }
+
+              SettingsButtonRow(
+                icon: "trash.fill",
+                title: "settings.storage.clear_image_cache",
+                style: .destructive,
+                isLoading: store.isClearingImageCache
+              ) {
+                store.send(.clearImageCacheTapped)
               }
             }
 

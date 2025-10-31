@@ -70,11 +70,13 @@ struct SettingsFeature {
     /// Storage info
     var totalStorageUsed: Int64 = 0
     var cacheSize: Int64 = 0
+    var imageCacheSize: Int64 = 0
     var downloadsSize: Int64 = 0
 
     /// Loading states
     var isLoadingSettings: Bool = false
     var isClearingCache: Bool = false
+    var isClearingImageCache: Bool = false
 
     /// Alert state
     @Presents var alert: AlertState<Action.Alert>?
@@ -88,6 +90,8 @@ struct SettingsFeature {
     case loadSettings
     /// Settings loaded
     case settingsLoaded(UserPreferences, StorageInfo)
+    /// Storage info updated
+    case storageInfoUpdated(StorageInfo)
 
     /// Theme actions
     case themeChanged(ThemeMode)
@@ -141,6 +145,9 @@ struct SettingsFeature {
     case clearCacheTapped
     case clearCacheConfirmed
     case cacheCleared(Int64)
+    case clearImageCacheTapped
+    case clearImageCacheConfirmed
+    case imageCacheCleared(Int64)
     case clearSearchHistoryTapped
     case searchHistoryCleared
 
@@ -160,6 +167,7 @@ struct SettingsFeature {
     /// Alert action enum
     enum Alert: Equatable {
       case confirmClearCache
+      case confirmClearImageCache
       case confirmClearSearchHistory
       case confirmLogout
     }
@@ -227,6 +235,15 @@ struct SettingsFeature {
         /// Update storage info
         state.totalStorageUsed = storageInfo.totalUsed
         state.cacheSize = storageInfo.cacheSize
+        state.imageCacheSize = storageInfo.imageCacheSize
+        state.downloadsSize = storageInfo.downloadsSize
+        return .none
+      
+      case .storageInfoUpdated(let storageInfo):
+        /// Update storage info
+        state.totalStorageUsed = storageInfo.totalUsed
+        state.cacheSize = storageInfo.cacheSize
+        state.imageCacheSize = storageInfo.imageCacheSize
         state.downloadsSize = storageInfo.downloadsSize
         return .none
 
@@ -470,6 +487,46 @@ struct SettingsFeature {
         state.totalStorageUsed -= clearedAmount
         print("✅ [Settings] Cache cleared: \(formatBytes(clearedAmount))")
         return .none
+      
+      case .clearImageCacheTapped:
+        state.alert = AlertState {
+          TextState("settings.image_cache.clear_alert_title")
+        } actions: {
+          ButtonState(role: .destructive, action: .confirmClearImageCache) {
+            TextState("settings.image_cache.clear_confirm")
+          }
+          ButtonState(role: .cancel) {
+            TextState("settings.image_cache.clear_cancel")
+          }
+        } message: {
+          TextState("settings.image_cache.clear_alert_message")
+        }
+        return .none
+      
+      case .alert(.presented(.confirmClearImageCache)):
+        return .send(.clearImageCacheConfirmed)
+      
+      case .clearImageCacheConfirmed:
+        state.isClearingImageCache = true
+        return .run { send in
+          // Clear image cache using the shared ImageCache
+          await MainActor.run {
+            ImageCache.shared.clearAllImageCaches()
+            print("✅ [Settings] Image cache cleared successfully")
+          }
+          
+          // Get updated cache size
+          let newImageCacheSize = await getImageCacheSize()
+          await send(.imageCacheCleared(newImageCacheSize))
+        }
+      
+      case .imageCacheCleared(let newSize):
+        state.isClearingImageCache = false
+        let clearedAmount = state.imageCacheSize - newSize
+        state.imageCacheSize = newSize
+        state.totalStorageUsed -= clearedAmount
+        print("✅ [Settings] Image cache cleared: \(formatBytes(clearedAmount))")
+        return .none
 
       case .clearSearchHistoryTapped:
         return .run { send in
@@ -573,11 +630,13 @@ struct SettingsFeature {
   /// Get storage information
   private func getStorageInfo() async -> StorageInfo {
     let cacheSize = await getCacheSize()
+    let imageCacheSize = await getImageCacheSize()
     /// TODO: Get downloads size from download manager
     let downloadsSize: Int64 = 0
     return StorageInfo(
-      totalUsed: cacheSize + downloadsSize,
+      totalUsed: cacheSize + imageCacheSize + downloadsSize,
       cacheSize: cacheSize,
+      imageCacheSize: imageCacheSize,
       downloadsSize: downloadsSize
     )
   }
@@ -596,6 +655,13 @@ struct SettingsFeature {
       totalSize += Int64(URLCache.shared.currentMemoryUsage)
       
       return totalSize
+    }
+  }
+  
+  /// Get current image cache size
+  private func getImageCacheSize() async -> Int64 {
+    return await MainActor.run {
+      ImageCache.shared.getCacheSize()
     }
   }
   
@@ -637,5 +703,6 @@ enum ContentRating: String, CaseIterable, Equatable, Codable {
 struct StorageInfo: Equatable {
   var totalUsed: Int64
   var cacheSize: Int64
+  var imageCacheSize: Int64
   var downloadsSize: Int64
 }

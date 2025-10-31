@@ -27,44 +27,26 @@ struct ContentPosterCard: View {
     Button(action: onTapped) {
       VStack(alignment: .leading, spacing: 8) {
         ZStack(alignment: .topLeading) {
-          /// Poster image with rounded corners (Hotstar style)
-          AsyncImage(url: useLandscapeRatio ? content.fullBackdropURL : content.fullPosterURL) {
-            phase in
-            switch phase {
-            case .success(let image):
-              image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: width, height: height)
-                .clipped()
-                .cornerRadius(.radiusM)
-            case .failure:
-              /// Error placeholder
-              Rectangle()
-                .fill(Color.surfaceBackground)
-                .frame(width: width, height: height)
-                .cornerRadius(.radiusM)
-                .overlay(
-                  Image(systemName: "photo")
-                    .font(.headlineSmall)
-                    .foregroundColor(.textTertiary)
-                )
-            case .empty:
-              /// Loading placeholder with shimmer
-              Rectangle()
-                .fill(Color.cardBackground)
-                .frame(width: width, height: height)
-                .cornerRadius(.radiusM)
-                .overlay(
-                  ProgressView()
-                    .tint(.textTertiary)
-                )
-            @unknown default:
-              Rectangle()
-                .fill(Color.cardBackground)
-                .frame(width: width, height: height)
-                .cornerRadius(.radiusM)
-            }
+          /// Poster image with rounded corners (Hotstar style) - Using cached image loader
+          CachedAsyncImage(
+            url: useLandscapeRatio ? content.fullBackdropURL : content.fullPosterURL
+          ) { image in
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .frame(width: width, height: height)
+              .clipped()
+              .cornerRadius(.radiusM)
+          } placeholder: {
+            /// Loading placeholder with shimmer
+            Rectangle()
+              .fill(Color.cardBackground)
+              .frame(width: width, height: height)
+              .cornerRadius(.radiusM)
+              .overlay(
+                ProgressView()
+                  .tint(.textTertiary)
+              )
           }
 
           /// Content type badge (top-left corner - Hotstar style)

@@ -58,35 +58,21 @@ struct HeroCarouselItem: View {
   var body: some View {
     Button(action: onItemTapped) {
       ZStack(alignment: .bottomLeading) {
-        // Background image
+        // Background image with caching
         GeometryReader { geometry in
-          AsyncImage(url: item.fullBackdropURL) { phase in
-            switch phase {
-            case .success(let image):
-              image
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: geometry.size.width, height: 500)
-                .clipped()
-            case .failure:
-              Color.surfaceBackground
-                .frame(width: geometry.size.width, height: 500)
-                .overlay(
-                  Image(systemName: "photo")
-                    .font(.displaySmall)
-                    .foregroundColor(.textTertiary)
-                )
-            case .empty:
-              Color.cardBackground
-                .frame(width: geometry.size.width, height: 500)
-                .overlay(
-                  ProgressView()
-                    .tint(.primaryBlue)
-                )
-            @unknown default:
-              Color.cardBackground
-                .frame(width: geometry.size.width, height: 500)
-            }
+          CachedAsyncImage(url: item.fullBackdropURL) { image in
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .frame(width: geometry.size.width, height: 500)
+              .clipped()
+          } placeholder: {
+            Color.cardBackground
+              .frame(width: geometry.size.width, height: 500)
+              .overlay(
+                ProgressView()
+                  .tint(.primaryBlue)
+              )
           }
         }
         .frame(height: 500)

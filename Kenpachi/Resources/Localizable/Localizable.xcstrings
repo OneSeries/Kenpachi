@@ -1610,6 +1610,72 @@
         }
       }
     },
+    "settings.storage.image_cache" : {
+      "comment" : "Image cache storage",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image Cache"
+          }
+        }
+      }
+    },
+    "settings.storage.clear_image_cache" : {
+      "comment" : "Clear image cache button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Image Cache"
+          }
+        }
+      }
+    },
+    "settings.image_cache.clear_alert_title" : {
+      "comment" : "Clear image cache alert title",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Image Cache?"
+          }
+        }
+      }
+    },
+    "settings.image_cache.clear_alert_message" : {
+      "comment" : "Clear image cache alert message",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will remove all cached images. Images will be downloaded again when needed."
+          }
+        }
+      }
+    },
+    "settings.image_cache.clear_confirm" : {
+      "comment" : "Clear image cache confirm button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        }
+      }
+    },
+    "settings.image_cache.clear_cancel" : {
+      "comment" : "Clear image cache cancel button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
     "settings.storage.downloads" : {
       "comment" : "Downloads storage",
       "localizations" : {
