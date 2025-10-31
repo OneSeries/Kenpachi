@@ -39,6 +39,12 @@ struct ContentDetailFeature {
     var similarContent: [Content] = []
     /// A boolean flag to control the auto-play of trailers.
     var autoPlayTrailer = true
+    /// A boolean flag to control the presentation of the download selection sheet.
+    var showDownloadSheet = false
+    /// Download started message
+    var downloadStartedMessage: String?
+    /// Show download started toast
+    var showDownloadStartedToast = false
 
     /// The initializer for the `State` struct.
     init(contentId: String, type: ContentType?) {
@@ -93,6 +99,16 @@ struct ContentDetailFeature {
     case shareTapped
     /// This action is triggered when the download button is tapped.
     case downloadTapped
+    /// This action is triggered when episode download button is tapped.
+    case episodeDownloadTapped(Episode)
+    /// This action is triggered when download selection is confirmed.
+    case downloadSelectionConfirmed(DownloadSelection)
+    /// This action is triggered to dismiss the download sheet.
+    case dismissDownloadSheet
+    /// This action is triggered to show download started toast.
+    case showDownloadStartedToast(String)
+    /// This action is triggered to dismiss the download started toast.
+    case dismissDownloadToast
     /// This action is triggered when a similar content item is tapped.
     case similarContentTapped(Content)
     /// This action is triggered when a cast member is tapped.
@@ -303,8 +319,71 @@ struct ContentDetailFeature {
         return .none
 
       case .downloadTapped:
-        // This is a placeholder for downloading the content.
-        // TODO: Implement download functionality
+        // Show download selection sheet
+        state.showDownloadSheet = true
+        return .none
+      
+      case .episodeDownloadTapped(let episode):
+        // Set selected episode and show download sheet
+        state.selectedEpisode = episode
+        state.showDownloadSheet = true
+        return .none
+      
+      case .downloadSelectionConfirmed(let selection):
+        // Dismiss the download sheet
+        state.showDownloadSheet = false
+        
+        // Create download with episode information
+        return .run { [clock] send in
+          // Create download
+          let download = Download(
+            content: selection.content,
+            episode: selection.episode,
+            state: .pending,
+            quality: selection.quality,
+            downloadURL: URL(string: selection.stream.url)
+          )
+          
+          // Add to download queue
+          await MainActor.run {
+            DownloadQueueManager.shared.addDownload(download, stream: selection.stream)
+          }
+          
+          // Show download started message
+          let message: String
+          if let episode = selection.episode {
+            message = "Download started: \(selection.content.title) - \(episode.formattedEpisodeId)"
+          } else {
+            message = "Download started: \(selection.content.title)"
+          }
+          
+          await send(.showDownloadStartedToast(message))
+          
+          // Auto-dismiss after 3 seconds
+          try await clock.sleep(for: .seconds(3))
+          await send(.dismissDownloadToast)
+          
+          AppLogger.shared.log(
+            "Download queued: \(selection.content.title) - \(selection.episode?.formattedEpisodeId ?? "Movie")",
+            level: .info
+          )
+        }
+      
+      case .showDownloadStartedToast(let message):
+        // Show the download toast
+        state.downloadStartedMessage = message
+        state.showDownloadStartedToast = true
+        return .none
+      
+      case .dismissDownloadToast:
+        // Dismiss the download toast
+        state.showDownloadStartedToast = false
+        state.downloadStartedMessage = nil
+        return .none
+      
+      case .dismissDownloadSheet:
+        // Dismiss the download sheet
+        state.showDownloadSheet = false
         return .none
 
       case .similarContentTapped(let content):

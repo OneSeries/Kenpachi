@@ -49,7 +49,8 @@ struct ContentDetailView: View {
                     }
                   },
                   onShareTapped: { viewStore.send(.shareTapped) },
-                  onDownloadTapped: { viewStore.send(.downloadTapped) }
+                  onDownloadTapped: content.type == .movie
+                    ? { viewStore.send(.downloadTapped) } : nil
                 )
 
                 // Content sections (Hotstar style - tighter spacing)
@@ -71,7 +72,10 @@ struct ContentDetailView: View {
                       selectedSeason: viewStore.selectedSeason,
                       selectedEpisode: viewStore.selectedEpisode,
                       onSeasonSelected: { viewStore.send(.seasonSelected($0)) },
-                      onEpisodeSelected: { viewStore.send(.episodeSelected($0)) }
+                      onEpisodeSelected: { viewStore.send(.episodeSelected($0)) },
+                      onEpisodeDownload: { episode in
+                        viewStore.send(.episodeDownloadTapped(episode))
+                      }
                     )
                   }
 
@@ -117,6 +121,30 @@ struct ContentDetailView: View {
             }
           }
         }
+        
+        // Download started toast
+        if viewStore.showDownloadStartedToast, let message = viewStore.downloadStartedMessage {
+          VStack {
+            Spacer()
+            
+            HStack(spacing: .spacingS) {
+              Image(systemName: "arrow.down.circle.fill")
+                .foregroundColor(.success)
+              
+              Text(message)
+                .font(.bodyMedium)
+                .foregroundColor(.white)
+            }
+            .padding(.spacingM)
+            .background(Color.black.opacity(0.85))
+            .cornerRadius(.radiusL)
+            .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+            .padding(.spacingL)
+            .padding(.bottom, .spacingXXL)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+          }
+          .ignoresSafeArea(edges: .bottom)
+        }
       }
       .background(Color.appBackground)  // The background color of the view.
       .navigationBarTitleDisplayMode(.inline)  // The navigation bar title is displayed inline.
@@ -145,6 +173,27 @@ struct ContentDetailView: View {
           )
         }
       }
+      .sheet(
+        isPresented: viewStore.binding(
+          get: \.showDownloadSheet,
+          send: .dismissDownloadSheet
+        )
+      ) {
+        // When `showDownloadSheet` is true, present the download selection sheet.
+        if let content = viewStore.content {
+          DownloadSelectionSheet(
+            content: content,
+            seasons: content.seasons,
+            selectedEpisode: viewStore.selectedEpisode,
+            onDownload: { selection in
+              viewStore.send(.downloadSelectionConfirmed(selection))
+            },
+            onDismiss: {
+              viewStore.send(.dismissDownloadSheet)
+            }
+          )
+        }
+      }
     }
   }
 }
@@ -159,7 +208,7 @@ struct ImmersiveHeaderView: View {
   let onTrailerTapped: () -> Void  // The action for the trailer button.
   let onWatchlistTapped: () -> Void  // The action for the watchlist button.
   let onShareTapped: () -> Void  // The action for the share button.
-  let onDownloadTapped: () -> Void  // The action for the download button.
+  let onDownloadTapped: (() -> Void)?  // The action for the download button (optional).
 
   var body: some View {
     ZStack(alignment: .bottom) {
@@ -259,22 +308,24 @@ struct ImmersiveHeaderView: View {
               )
           }
 
-          // Download button
-          Button(action: onDownloadTapped) {
-            Image(systemName: "arrow.down.circle")
-              .font(.headlineSmall)
-              .fontWeight(.semibold)
-              .foregroundColor(.white)
-              .frame(width: 48, height: 48)
-              .background(
-                Color.black.opacity(0.5)
-                  .overlay(Color.white.opacity(0.15))
-              )
-              .cornerRadius(.radiusM)
-              .overlay(
-                RoundedRectangle(cornerRadius: .radiusM)
-                  .stroke(Color.white.opacity(0.3), lineWidth: 1)
-              )
+          // Download button (only for movies and anime movies)
+          if let onDownloadTapped = onDownloadTapped {
+            Button(action: onDownloadTapped) {
+              Image(systemName: "arrow.down.circle")
+                .font(.headlineSmall)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(width: 48, height: 48)
+                .background(
+                  Color.black.opacity(0.5)
+                    .overlay(Color.white.opacity(0.15))
+                )
+                .cornerRadius(.radiusM)
+                .overlay(
+                  RoundedRectangle(cornerRadius: .radiusM)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
+            }
           }
         }
         .padding(.horizontal, .spacingL - 4)

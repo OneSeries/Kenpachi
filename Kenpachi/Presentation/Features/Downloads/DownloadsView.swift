@@ -1,12 +1,11 @@
 // DownloadsView.swift
 // Downloads management screen
-// Displays downloaded content with progress tracking and storage info
+// Clean, modern design with horizontal scrolling cards
 
 import ComposableArchitecture
 import SwiftUI
 
 struct DownloadsView: View {
-  /// TCA store for downloads feature
   let store: StoreOf<DownloadsFeature>
 
   var body: some View {
@@ -16,47 +15,31 @@ struct DownloadsView: View {
           Color.appBackground.ignoresSafeArea()
 
           if viewStore.isLoading {
-            /// Loading state
             LoadingView()
           } else if viewStore.downloads.isEmpty {
-            /// Empty state
             EmptyDownloadsView()
           } else {
-            /// Downloads list (Hotstar style)
             ScrollView {
-              VStack(spacing: .spacingS) {
-                /// Storage info card (compact)
-                StorageInfoCard(
+              VStack(alignment: .leading, spacing: .spacingM) {
+                // Storage bar at top
+                StorageBar(
                   used: viewStore.storageUsed,
-                  available: viewStore.storageAvailable,
-                  onTap: { viewStore.send(.storageInfoTapped) }
+                  available: viewStore.storageAvailable
                 )
                 .padding(.horizontal, .spacingM)
-                .padding(.top, .spacingS)
+                .padding(.top, .spacingXS)
 
-                /// Section header
-                HStack {
-                  Text("downloads.list.title")
-                    .font(.headlineSmall)
-                    .foregroundColor(.textPrimary)
-
-                  Spacer()
-
-                  Text("\(viewStore.downloads.count)")
-                    .font(.labelMedium)
-                    .foregroundColor(.textSecondary)
-                    .padding(.horizontal, .spacingS + 2)
-                    .padding(.vertical, .spacingXS)
-                    .background(Color.cardBackground)
-                    .cornerRadius(.radiusS)
-                }
-                .padding(.horizontal, .spacingM)
-                .padding(.top, .spacingM)
-
-                /// Downloads list
-                LazyVStack(spacing: .spacingS) {
+                // Compact downloads grid
+                LazyVGrid(
+                  columns: [
+                    GridItem(.flexible(), spacing: .spacingS),
+                    GridItem(.flexible(), spacing: .spacingS),
+                    GridItem(.flexible(), spacing: .spacingS)
+                  ],
+                  spacing: .spacingM
+                ) {
                   ForEach(viewStore.downloads) { download in
-                    DownloadItemCard(
+                    DownloadCard(
                       download: download,
                       onTap: { viewStore.send(.downloadTapped(download)) },
                       onDelete: { viewStore.send(.deleteDownloadTapped(download)) },
@@ -68,25 +51,27 @@ struct DownloadsView: View {
                 }
                 .padding(.horizontal, .spacingM)
               }
-              .padding(.bottom, .spacingM)
+              .padding(.bottom, .spacingL)
             }
           }
         }
         .navigationTitle("downloads.title")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
           ToolbarItem(placement: .navigationBarTrailing) {
             Button {
-              viewStore.send(.refresh)
+              viewStore.send(.storageInfoTapped)
             } label: {
-              Image(systemName: "arrow.clockwise")
-                .font(.labelLarge)
-                .foregroundColor(.primaryBlue)
+              Image(systemName: "info.circle")
+                .foregroundColor(.textSecondary)
             }
           }
         }
         .onAppear {
           viewStore.send(.onAppear)
+        }
+        .onDisappear {
+          viewStore.send(.onDisappear)
         }
         .alert(
           "downloads.delete.title",
@@ -115,37 +100,74 @@ struct DownloadsView: View {
             available: viewStore.storageAvailable
           )
         }
+        .fullScreenCover(
+          isPresented: viewStore.binding(
+            get: \.showPlayer,
+            send: .dismissPlayer
+          )
+        ) {
+          if let download = viewStore.downloadToPlay,
+            let localFilePath = download.localFilePath
+          {
+            let localLink = ExtractedLink(
+              url: localFilePath.absoluteString,
+              quality: download.quality?.displayName,
+              server: "Local File",
+              type: .direct
+            )
+
+            PlayerView(
+              store: Store(
+                initialState: PlayerFeature.State(
+                  content: download.content,
+                  episode: download.episode,
+                  streamingLinks: [localLink]
+                )
+              ) {
+                PlayerFeature()
+              }
+            )
+          }
+        }
       }
     }
   }
 }
 
-// MARK: - Empty Downloads View
+// MARK: - Empty State
 struct EmptyDownloadsView: View {
   var body: some View {
     VStack(spacing: .spacingL) {
-      Image(systemName: "arrow.down.circle")
-        .font(.system(size: 80))
-        .foregroundColor(.textTertiary)
+      ZStack {
+        Circle()
+          .fill(Color.cardBackground)
+          .frame(width: 120, height: 120)
+        
+        Image(systemName: "arrow.down.circle.fill")
+          .font(.system(size: 60))
+          .foregroundColor(.textTertiary)
+      }
 
-      Text("downloads.empty.title")
-        .font(.headlineLarge)
-        .foregroundColor(.textPrimary)
+      VStack(spacing: .spacingS) {
+        Text("downloads.empty.title")
+          .font(.headlineLarge)
+          .fontWeight(.semibold)
+          .foregroundColor(.textPrimary)
 
-      Text("downloads.empty.message")
-        .font(.bodyMedium)
-        .foregroundColor(.textSecondary)
-        .multilineTextAlignment(.center)
-        .padding(.horizontal, .spacingXXL)
+        Text("downloads.empty.message")
+          .font(.bodyMedium)
+          .foregroundColor(.textSecondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, .spacingXXL)
+      }
     }
   }
 }
 
-// MARK: - Storage Info Card (Hotstar Style - Compact)
-struct StorageInfoCard: View {
+// MARK: - Storage Bar
+struct StorageBar: View {
   let used: Int64
   let available: Int64
-  let onTap: () -> Void
 
   private var usagePercentage: CGFloat {
     guard available > 0 else { return 0 }
@@ -153,56 +175,46 @@ struct StorageInfoCard: View {
   }
 
   var body: some View {
-    Button(action: onTap) {
-      HStack(spacing: .spacingS + 4) {
-        /// Circular progress indicator
-        ZStack {
-          Circle()
-            .stroke(Color.cardBackground.opacity(0.3), lineWidth: 4)
-            .frame(width: 50, height: 50)
-
-          Circle()
-            .trim(from: 0, to: usagePercentage)
-            .stroke(Color.primaryBlue, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-            .frame(width: 50, height: 50)
-            .rotationEffect(.degrees(-90))
-
-          Image(systemName: "internaldrive.fill")
-            .font(.labelLarge)
-            .foregroundColor(.primaryBlue)
-        }
-
-        VStack(alignment: .leading, spacing: .spacingXS / 2) {
-          Text("downloads.storage.title")
-            .font(.bodyMedium)
-            .fontWeight(.medium)
-            .foregroundColor(.textPrimary)
-
-          HStack(spacing: .spacingXS) {
-            Text(formatBytes(used))
-              .font(.captionLarge)
-              .foregroundColor(.textSecondary)
-            Text("•")
-              .font(.captionLarge)
-              .foregroundColor(.textTertiary)
-            Text("\(Int(usagePercentage * 100))% used")
-              .font(.captionLarge)
-              .foregroundColor(.textSecondary)
-          }
-        }
-
+    VStack(alignment: .leading, spacing: .spacingS) {
+      HStack {
+        Text(formatBytes(used))
+          .font(.captionLarge)
+          .fontWeight(.medium)
+          .foregroundColor(.textPrimary)
+        
+        Text("of \(formatBytes(available))")
+          .font(.captionLarge)
+          .foregroundColor(.textSecondary)
+        
         Spacer()
-
-        Image(systemName: "chevron.right")
-          .font(.captionMedium)
-          .foregroundColor(.textTertiary)
+        
+        Text("\(Int(usagePercentage * 100))%")
+          .font(.captionLarge)
+          .fontWeight(.medium)
+          .foregroundColor(.textPrimary)
       }
-      .padding(.horizontal, .spacingM)
-      .padding(.vertical, .spacingS + 4)
-      .background(Color.cardBackground)
-      .cornerRadius(.radiusM)
+      
+      GeometryReader { geometry in
+        ZStack(alignment: .leading) {
+          // Background
+          RoundedRectangle(cornerRadius: 2)
+            .fill(Color.cardBackground)
+            .frame(height: 4)
+          
+          // Progress
+          RoundedRectangle(cornerRadius: 2)
+            .fill(
+              LinearGradient(
+                colors: [Color.primaryBlue, Color.primaryBlue.opacity(0.7)],
+                startPoint: .leading,
+                endPoint: .trailing
+              )
+            )
+            .frame(width: geometry.size.width * usagePercentage, height: 4)
+        }
+      }
+      .frame(height: 4)
     }
-    .buttonStyle(PlainButtonStyle())
   }
 
   private func formatBytes(_ bytes: Int64) -> String {
@@ -212,187 +224,189 @@ struct StorageInfoCard: View {
   }
 }
 
-// MARK: - Download Item Card (Hotstar Style - Compact)
-struct DownloadItemCard: View {
+// MARK: - Download Card (Compact)
+struct DownloadCard: View {
   let download: Download
   let onTap: () -> Void
   let onDelete: () -> Void
   let onPause: () -> Void
   let onResume: () -> Void
   let onCancel: () -> Void
-
-  var body: some View {
-    HStack(spacing: .spacingS + 4) {
-      /// Thumbnail with overlay icon
-      ZStack(alignment: .center) {
-        if let posterURL = download.content.fullPosterURL {
-          AsyncImage(url: posterURL) { image in
-            image
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-          } placeholder: {
-            Color.cardBackground
-          }
-          .frame(width: 100, height: 140)
-          .cornerRadius(.radiusM)
-        } else {
-          Color.cardBackground
-            .frame(width: 100, height: 140)
-            .cornerRadius(.radiusM)
-        }
-
-        /// State overlay icon
-        if download.state == .completed {
-          Circle()
-            .fill(Color.success.opacity(0.9))
-            .frame(width: 36, height: 36)
-            .overlay(
-              Image(systemName: "checkmark")
-                .font(.labelMedium)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-            )
-        } else if download.state == .downloading {
-          Circle()
-            .fill(Color.black.opacity(0.7))
-            .frame(width: 36, height: 36)
-            .overlay(
-              Text("\(Int(download.progress * 100))%")
-                .font(.captionMedium)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-            )
-        }
-      }
-      .onTapGesture {
-        onTap()
-      }
-
-      /// Info
-      VStack(alignment: .leading, spacing: .spacingXS) {
+  
+  @State private var showMenu = false
+  
+  private var placeholderView: some View {
+    ZStack {
+      Color.cardBackground
+        .aspectRatio(2/3, contentMode: .fill)
+      
+      VStack(spacing: 4) {
+        Image(systemName: download.content.type == .movie ? "film.fill" : "tv.fill")
+          .font(.headlineMedium)
+          .foregroundColor(.textTertiary)
+        
         Text(download.content.title)
-          .font(.bodyMedium)
-          .fontWeight(.medium)
-          .foregroundColor(.textPrimary)
+          .font(.captionSmall)
+          .foregroundColor(.textTertiary)
+          .multilineTextAlignment(.center)
           .lineLimit(2)
-
-        if let episode = download.episode {
-          Text(episode.formattedEpisodeId)
-            .font(.captionLarge)
-            .foregroundColor(.textSecondary)
-        }
-
-        Spacer()
-
-        /// Download state (compact)
-        HStack(spacing: .spacingXS) {
-          switch download.state {
-          case .downloading:
-            ProgressView(value: download.progress)
-              .tint(.primaryBlue)
-              .frame(maxWidth: .infinity)
-
-          case .completed:
-            if let quality = download.quality {
-              Text(quality.displayName)
-                .font(.captionMedium)
-                .foregroundColor(.textSecondary)
-                .padding(.horizontal, .spacingXS + 2)
-                .padding(.vertical, .spacingXS / 2)
-                .background(Color.success.opacity(0.15))
-                .cornerRadius(.radiusS)
-            }
-
-          case .paused:
-            Image(systemName: "pause.circle.fill")
-              .font(.captionLarge)
-              .foregroundColor(.warning)
-            Text("downloads.state.paused")
-              .font(.captionLarge)
-              .foregroundColor(.warning)
-
-          case .failed:
-            Image(systemName: "exclamationmark.circle.fill")
-              .font(.captionLarge)
-              .foregroundColor(.error)
-            Text("downloads.state.failed")
-              .font(.captionLarge)
-              .foregroundColor(.error)
-
-          case .pending:
-            Image(systemName: "clock.fill")
-              .font(.captionLarge)
-              .foregroundColor(.textSecondary)
-            Text("downloads.state.pending")
-              .font(.captionLarge)
-              .foregroundColor(.textSecondary)
-          }
-
-          Spacer()
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-
-      /// Actions menu (compact)
-      Menu {
-        if download.state == .downloading {
-          Button {
-            onPause()
-          } label: {
-            Label("downloads.action.pause", systemImage: "pause.fill")
-          }
-
-          Button(role: .destructive) {
-            onCancel()
-          } label: {
-            Label("downloads.action.cancel", systemImage: "xmark")
-          }
-        } else if download.state == .paused {
-          Button {
-            onResume()
-          } label: {
-            Label("downloads.action.resume", systemImage: "play.fill")
-          }
-
-          Button(role: .destructive) {
-            onCancel()
-          } label: {
-            Label("downloads.action.cancel", systemImage: "xmark")
-          }
-        } else if download.state == .completed {
-          Button {
-            onTap()
-          } label: {
-            Label("downloads.action.play", systemImage: "play.fill")
-          }
-
-          Button(role: .destructive) {
-            onDelete()
-          } label: {
-            Label("downloads.action.delete", systemImage: "trash")
-          }
-        } else if download.state == .failed {
-          Button {
-            onResume()
-          } label: {
-            Label("downloads.action.retry", systemImage: "arrow.clockwise")
-          }
-
-          Button(role: .destructive) {
-            onDelete()
-          } label: {
-            Label("downloads.action.delete", systemImage: "trash")
-          }
-        }
-      } label: {
-        Image(systemName: "ellipsis.circle")
-          .font(.headlineSmall)
-          .foregroundColor(.textSecondary)
+          .padding(.horizontal, 4)
       }
     }
-    .padding(.spacingS + 4)
-    .background(Color.cardBackground)
-    .cornerRadius(.radiusM)
+  }
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Compact poster with overlay
+      ZStack(alignment: .topTrailing) {
+        Button(action: onTap) {
+          ZStack(alignment: .center) {
+            // Poster or placeholder
+            if let posterURL = download.content.fullPosterURL {
+              AsyncImage(url: posterURL) { phase in
+                switch phase {
+                case .success(let image):
+                  image
+                    .resizable()
+                    .aspectRatio(2/3, contentMode: .fill)
+                case .failure:
+                  // Failed to load - show placeholder
+                  placeholderView
+                case .empty:
+                  // Loading - show placeholder
+                  placeholderView
+                @unknown default:
+                  placeholderView
+                }
+              }
+            } else {
+              // No URL - show placeholder
+              placeholderView
+            }
+            
+            // State overlay
+            if download.state == .downloading {
+              ZStack {
+                Color.black.opacity(0.6)
+                
+                VStack(spacing: 4) {
+                  ProgressView(value: download.progress)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(1.2)
+                  
+                  Text("\(Int(download.progress * 100))%")
+                    .font(.captionSmall)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                }
+              }
+            } else if download.state == .completed {
+              VStack {
+                Spacer()
+                HStack {
+                  Spacer()
+                  Image(systemName: "checkmark.circle.fill")
+                    .font(.labelMedium)
+                    .foregroundColor(.success)
+                    .padding(4)
+                    .background(Color.black.opacity(0.6))
+                    .clipShape(Circle())
+                    .padding(4)
+                }
+              }
+            } else if download.state == .paused {
+              ZStack {
+                Color.black.opacity(0.6)
+                
+                Image(systemName: "pause.circle.fill")
+                  .font(.headlineMedium)
+                  .foregroundColor(.white)
+              }
+            } else if download.state == .failed {
+              ZStack {
+                Color.black.opacity(0.6)
+                
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .font(.headlineMedium)
+                  .foregroundColor(.error)
+              }
+            }
+          }
+          .clipShape(RoundedRectangle(cornerRadius: .radiusS))
+        }
+        .buttonStyle(PlainButtonStyle())
+        
+        // Compact menu button
+        Button {
+          showMenu = true
+        } label: {
+          Image(systemName: "ellipsis.circle.fill")
+            .font(.labelMedium)
+            .foregroundColor(.white)
+            .padding(4)
+            .background(Color.black.opacity(0.5))
+            .clipShape(Circle())
+        }
+        .padding(4)
+      }
+      
+      // Compact info section
+      VStack(alignment: .leading, spacing: 2) {
+        Text(download.content.title)
+          .font(.captionLarge)
+          .fontWeight(.semibold)
+          .foregroundColor(.textPrimary)
+          .lineLimit(1)
+        
+        if let episode = download.episode {
+          Text(episode.formattedEpisodeId)
+            .font(.captionSmall)
+            .foregroundColor(.textSecondary)
+            .lineLimit(1)
+        }
+        
+        if let quality = download.quality {
+          Text(quality.displayName)
+            .font(.captionSmall)
+            .foregroundColor(.textSecondary)
+        }
+      }
+      .padding(.top, 6)
+      .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    .confirmationDialog("", isPresented: $showMenu, titleVisibility: .hidden) {
+      if download.state == .downloading {
+        Button("downloads.action.pause") {
+          onPause()
+        }
+        Button("downloads.action.cancel", role: .destructive) {
+          onCancel()
+        }
+      } else if download.state == .paused {
+        Button("downloads.action.resume") {
+          onResume()
+        }
+        Button("downloads.action.cancel", role: .destructive) {
+          onCancel()
+        }
+      } else if download.state == .completed {
+        Button("downloads.action.play") {
+          onTap()
+        }
+        Button("downloads.action.delete", role: .destructive) {
+          onDelete()
+        }
+      } else if download.state == .failed {
+        Button("downloads.action.retry") {
+          onResume()
+        }
+        Button("downloads.action.delete", role: .destructive) {
+          onDelete()
+        }
+      }
+      
+      Button("common.cancel", role: .cancel) {}
+    }
   }
 }
 
@@ -513,3 +527,5 @@ struct StorageRow: View {
     }
   }
 }
+
+

@@ -15,6 +15,8 @@ struct EpisodeListSection: View {
   let onSeasonSelected: (Season) -> Void
   /// Episode selection callback
   let onEpisodeSelected: (Episode) -> Void
+  /// Episode download callback
+  var onEpisodeDownload: ((Episode) -> Void)? = nil
 
   var body: some View {
     VStack(alignment: .leading, spacing: .spacingS + 4) {
@@ -41,7 +43,8 @@ struct EpisodeListSection: View {
             EpisodeCard(
               episode: episode,
               isSelected: selectedEpisode?.id == episode.id,
-              onTapped: { onEpisodeSelected(episode) }
+              onTapped: { onEpisodeSelected(episode) },
+              onDownloadTapped: onEpisodeDownload != nil ? { onEpisodeDownload?(episode) } : nil
             )
           }
         }
@@ -91,11 +94,13 @@ struct EpisodeCard: View {
   let isSelected: Bool
   /// Tap callback
   let onTapped: () -> Void
+  /// Download callback
+  var onDownloadTapped: (() -> Void)? = nil
 
   var body: some View {
-    Button(action: onTapped) {
-      HStack(spacing: .spacingS + 4) {
-        /// Episode thumbnail
+    HStack(spacing: .spacingS + 4) {
+      /// Episode thumbnail (tappable for play)
+      Button(action: onTapped) {
         ZStack(alignment: .center) {
           if let stillURL = episode.fullStillURL {
             AsyncImage(url: stillURL) { image in
@@ -112,15 +117,10 @@ struct EpisodeCard: View {
             .frame(width: 140, height: 80)
             .cornerRadius(.radiusM)
           } else {
-            /// Placeholder
-            ZStack {
-              Color.cardBackground
-              Image(systemName: "photo")
-                .font(.headlineLarge)
-                .foregroundColor(.textTertiary)
-            }
-            .frame(width: 140, height: 80)
-            .cornerRadius(.radiusM)
+            /// Placeholder without icon
+            Color.cardBackground
+              .frame(width: 140, height: 80)
+              .cornerRadius(.radiusM)
           }
 
           /// Play overlay
@@ -129,41 +129,52 @@ struct EpisodeCard: View {
             .foregroundColor(.white)
             .shadow(color: .black.opacity(0.3), radius: .spacingXS)
         }
+      }
+      .buttonStyle(PlainButtonStyle())
 
-        /// Episode info
-        VStack(alignment: .leading, spacing: .spacingXS + 2) {
-          /// Episode number and title
-          Text("\(episode.formattedEpisodeId) • \(episode.name)")
-            .font(.bodyMedium)
-            .foregroundColor(.textPrimary)
-            .lineLimit(2)
+      /// Episode info
+      VStack(alignment: .leading, spacing: .spacingXS + 2) {
+        /// Episode number and title
+        Text("\(episode.formattedEpisodeId) • \(episode.name)")
+          .font(.bodyMedium)
+          .foregroundColor(.textPrimary)
+          .lineLimit(2)
 
-          /// Runtime
-          if let runtime = episode.formattedRuntime {
-            Text(runtime)
-              .font(.captionLarge)
-              .foregroundColor(.textSecondary)
-          }
-
-          /// Overview
-          if let overview = episode.overview, !overview.isEmpty {
-            Text(overview)
-              .font(.captionLarge)
-              .foregroundColor(.textTertiary)
-              .lineLimit(2)
-          }
+        /// Runtime
+        if let runtime = episode.formattedRuntime {
+          Text(runtime)
+            .font(.captionLarge)
+            .foregroundColor(.textSecondary)
         }
 
-        Spacer()
+        /// Overview
+        if let overview = episode.overview, !overview.isEmpty {
+          Text(overview)
+            .font(.captionLarge)
+            .foregroundColor(.textTertiary)
+            .lineLimit(2)
+        }
       }
-      .padding(.spacingS + 4)
-      .background(
-        isSelected
-          ? Color.primaryBlue.opacity(0.2)
-          : Color.cardBackground
-      )
-      .cornerRadius(.radiusM)
+
+      Spacer()
+
+      /// Download button
+      if let onDownloadTapped = onDownloadTapped {
+        Button(action: onDownloadTapped) {
+          Image(systemName: "arrow.down.circle")
+            .font(.headlineLarge)
+            .foregroundColor(.primaryBlue)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .padding(.trailing, .spacingS)
+      }
     }
-    .buttonStyle(PlainButtonStyle())
+    .padding(.spacingS + 4)
+    .background(
+      isSelected
+        ? Color.primaryBlue.opacity(0.2)
+        : Color.cardBackground
+    )
+    .cornerRadius(.radiusM)
   }
 }

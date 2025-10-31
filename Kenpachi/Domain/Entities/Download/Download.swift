@@ -5,7 +5,7 @@
 import Foundation
 
 /// Represents a content download with its current state and progress
-struct Download: Equatable, Identifiable {
+struct Download: Equatable, Identifiable, Codable {
   /// Unique identifier for the download
   let id: String
   /// Content being downloaded
