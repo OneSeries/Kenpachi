@@ -11,85 +11,27 @@ struct SimilarContentSection: View {
   let onContentTapped: (Content) -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: .spacingS) {
-      /// Section title
-      Text("content.more.title")
+    VStack(alignment: .leading, spacing: .spacingS + 4) {
+      /// Section title (Hotstar style)
+      Text("content.more_like_this")
         .font(.headlineSmall)
-        .foregroundColor(Color.textPrimary)
+        .foregroundColor(.textPrimary)
+        .padding(.horizontal, .spacingL - 4)
 
       /// Horizontal scrolling content list
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: .spacingS) {
+        HStack(spacing: .spacingS + 4) {
           ForEach(content) { item in
-            SimilarContentCard(
+            ContentPosterCard(
               content: item,
-              onTapped: { onContentTapped(item) }
+              onTapped: { onContentTapped(item) },
+              width: 110,
+              showTitle: false
             )
           }
         }
+        .padding(.horizontal, .spacingL - 4)
       }
     }
-  }
-}
-
-// MARK: - Similar Content Card
-struct SimilarContentCard: View {
-  /// Content to display
-  let content: Content
-  /// Tap callback
-  let onTapped: () -> Void
-
-  var body: some View {
-    Button(action: onTapped) {
-      VStack(alignment: .leading, spacing: .spacingS) {
-        /// Poster image
-        if let posterURL = content.fullPosterURL {
-          AsyncImage(url: posterURL) { image in
-            image
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-          } placeholder: {
-            ZStack {
-              Color.surfaceBackground
-              ProgressView()
-                .tint(.primaryBlue)
-            }
-          }
-          .frame(width: 120, height: 180)
-          .cornerRadius(.radiusM)
-        } else {
-          /// Placeholder
-          ZStack {
-            Color.surfaceBackground
-            Image(systemName: "film")
-              .font(.title)
-              .foregroundColor(.textTertiary)
-          }
-          .frame(width: 120, height: 180)
-          .cornerRadius(.radiusM)
-        }
-
-        /// Title
-        Text(content.title)
-          .font(.captionLarge)
-          .fontWeight(.medium)
-          .foregroundColor(Color.textPrimary)
-          .lineLimit(2)
-          .frame(width: 120, alignment: .leading)
-
-        /// Rating
-        if let rating = content.formattedRating {
-          HStack(spacing: .spacingXS) {
-            Image(systemName: "star.fill")
-              .font(.captionSmall)
-              .foregroundColor(.warning)
-            Text(rating)
-              .font(.captionMedium)
-              .foregroundColor(Color.textSecondary)
-          }
-        }
-      }
-    }
-    .buttonStyle(PlainButtonStyle())
   }
 }

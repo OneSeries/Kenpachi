@@ -15,12 +15,13 @@ struct SettingsView: View {
     NavigationStack {
       contentView
         .navigationTitle("settings.title")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .navigationBarTrailing) {
             Button("settings.done") {
               dismiss()
             }
+            .foregroundColor(.primaryBlue)
           }
         }
         .alert($store.scope(state: \.alert, action: \.alert))
@@ -374,23 +375,25 @@ struct SettingsView: View {
               }
             }
 
-            /// Logout button
+            /// Logout button (Hotstar style)
             Button {
               store.send(.logoutTapped)
             } label: {
-              HStack {
+              HStack(spacing: .spacingS) {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
+                  .font(.labelLarge)
                 Text("settings.logout")
+                  .font(.labelLarge)
+                  .fontWeight(.medium)
               }
-              .font(.bodyMedium)
-              .foregroundColor(.error)
+              .foregroundColor(.white)
               .frame(maxWidth: .infinity)
-              .padding(.spacingM)
-              .background(Color.cardBackground)
+              .padding(.vertical, .spacingM)
+              .background(Color.error)
               .cornerRadius(.radiusM)
             }
             .padding(.horizontal, .spacingM)
-            .padding(.vertical, .spacingM)
+            .padding(.vertical, .spacingS)
           }
         }
       }
@@ -398,7 +401,7 @@ struct SettingsView: View {
   }
 }
 
-// MARK: - Settings Section
+// MARK: - Settings Section (Hotstar Style - Compact)
 struct SettingsSection<Content: View>: View {
   let title: String
   @ViewBuilder let content: () -> Content
@@ -406,11 +409,14 @@ struct SettingsSection<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: .spacingS) {
       Text(LocalizedStringKey(title))
-        .font(.labelLarge)
+        .font(.labelMedium)
         .foregroundColor(.textSecondary)
+        .textCase(.uppercase)
+        .tracking(0.5)
         .padding(.horizontal, .spacingM)
+        .padding(.top, .spacingXS)
 
-      VStack(spacing: 1) {
+      VStack(spacing: 0) {
         content()
       }
       .background(Color.cardBackground)
@@ -420,7 +426,7 @@ struct SettingsSection<Content: View>: View {
   }
 }
 
-// MARK: - Settings Info Row (non-navigable)
+// MARK: - Settings Info Row (non-navigable - Hotstar Style)
 struct SettingsInfoRow: View {
   let icon: String
   let title: String
@@ -428,20 +434,20 @@ struct SettingsInfoRow: View {
   var value: String?
 
   var body: some View {
-    HStack(spacing: .spacingM) {
+    HStack(spacing: .spacingS + 4) {
       Image(systemName: icon)
-        .font(.title3)
+        .font(.labelLarge)
         .foregroundColor(.primaryBlue)
-        .frame(width: 28)
+        .frame(width: 24)
 
-      VStack(alignment: .leading, spacing: .spacingXS) {
+      VStack(alignment: .leading, spacing: .spacingXS / 2) {
         Text(LocalizedStringKey(title))
           .font(.bodyMedium)
           .foregroundColor(.textPrimary)
 
         if let subtitle = subtitle {
           Text(LocalizedStringKey(subtitle))
-            .font(.captionLarge)
+            .font(.captionMedium)
             .foregroundColor(.textSecondary)
         }
       }
@@ -450,15 +456,17 @@ struct SettingsInfoRow: View {
 
       if let value = value {
         Text(value)
-          .font(.bodySmall)
+          .font(.captionLarge)
           .foregroundColor(.textSecondary)
       }
     }
-    .padding(.spacingM)
+    .padding(.horizontal, .spacingM)
+    .padding(.vertical, .spacingS + 4)
+    .background(Color.cardBackground)
   }
 }
 
-// MARK: - Settings Row (navigable)
+// MARK: - Settings Row (navigable - Hotstar Style)
 struct SettingsRow<Destination: View>: View {
   let icon: String
   let title: String
@@ -470,20 +478,20 @@ struct SettingsRow<Destination: View>: View {
     NavigationLink {
       destination()
     } label: {
-      HStack(spacing: .spacingM) {
+      HStack(spacing: .spacingS + 4) {
         Image(systemName: icon)
-          .font(.title3)
+          .font(.labelLarge)
           .foregroundColor(.primaryBlue)
-          .frame(width: 28)
+          .frame(width: 24)
 
-        VStack(alignment: .leading, spacing: .spacingXS) {
+        VStack(alignment: .leading, spacing: .spacingXS / 2) {
           Text(LocalizedStringKey(title))
             .font(.bodyMedium)
             .foregroundColor(.textPrimary)
 
           if let subtitle = subtitle {
             Text(LocalizedStringKey(subtitle))
-              .font(.captionLarge)
+              .font(.captionMedium)
               .foregroundColor(.textSecondary)
           }
         }
@@ -492,20 +500,22 @@ struct SettingsRow<Destination: View>: View {
 
         if let value = value {
           Text(value)
-            .font(.bodySmall)
+            .font(.captionLarge)
             .foregroundColor(.textSecondary)
         }
 
         Image(systemName: "chevron.right")
-          .font(.captionLarge)
+          .font(.captionMedium)
           .foregroundColor(.textTertiary)
       }
-      .padding(.spacingM)
+      .padding(.horizontal, .spacingM)
+      .padding(.vertical, .spacingS + 4)
+      .background(Color.cardBackground)
     }
   }
 }
 
-// MARK: - Settings Toggle Row
+// MARK: - Settings Toggle Row (Hotstar Style)
 struct SettingsToggleRow: View {
   let icon: String
   let title: String
@@ -513,20 +523,20 @@ struct SettingsToggleRow: View {
   @Binding var isOn: Bool
 
   var body: some View {
-    HStack(spacing: .spacingM) {
+    HStack(spacing: .spacingS + 4) {
       Image(systemName: icon)
-        .font(.title3)
+        .font(.labelLarge)
         .foregroundColor(.primaryBlue)
-        .frame(width: 28)
+        .frame(width: 24)
 
-      VStack(alignment: .leading, spacing: .spacingXS) {
+      VStack(alignment: .leading, spacing: .spacingXS / 2) {
         Text(LocalizedStringKey(title))
           .font(.bodyMedium)
           .foregroundColor(.textPrimary)
 
         if let subtitle = subtitle {
           Text(LocalizedStringKey(subtitle))
-            .font(.captionLarge)
+            .font(.captionMedium)
             .foregroundColor(.textSecondary)
         }
       }
@@ -535,12 +545,15 @@ struct SettingsToggleRow: View {
 
       Toggle("", isOn: $isOn)
         .labelsHidden()
+        .tint(.primaryBlue)
     }
-    .padding(.spacingM)
+    .padding(.horizontal, .spacingM)
+    .padding(.vertical, .spacingS + 4)
+    .background(Color.cardBackground)
   }
 }
 
-// MARK: - Settings Button Row
+// MARK: - Settings Button Row (Hotstar Style)
 struct SettingsButtonRow: View {
   let icon: String
   let title: String
@@ -555,11 +568,11 @@ struct SettingsButtonRow: View {
 
   var body: some View {
     Button(action: action) {
-      HStack(spacing: .spacingM) {
+      HStack(spacing: .spacingS + 4) {
         Image(systemName: icon)
-          .font(.title3)
+          .font(.labelLarge)
           .foregroundColor(style == .destructive ? .error : .primaryBlue)
-          .frame(width: 28)
+          .frame(width: 24)
 
         Text(LocalizedStringKey(title))
           .font(.bodyMedium)
@@ -572,28 +585,30 @@ struct SettingsButtonRow: View {
             .tint(.textSecondary)
         } else {
           Image(systemName: "chevron.right")
-            .font(.captionLarge)
+            .font(.captionMedium)
             .foregroundColor(.textTertiary)
         }
       }
-      .padding(.spacingM)
+      .padding(.horizontal, .spacingM)
+      .padding(.vertical, .spacingS + 4)
+      .background(Color.cardBackground)
     }
     .disabled(isLoading)
   }
 }
 
-// MARK: - Storage Info Row
+// MARK: - Storage Info Row (Hotstar Style)
 struct StorageInfoRow: View {
   let icon: String
   let title: String
   let size: Int64
 
   var body: some View {
-    HStack(spacing: .spacingM) {
+    HStack(spacing: .spacingS + 4) {
       Image(systemName: icon)
-        .font(.title3)
+        .font(.labelLarge)
         .foregroundColor(.primaryBlue)
-        .frame(width: 28)
+        .frame(width: 24)
 
       Text(LocalizedStringKey(title))
         .font(.bodyMedium)
@@ -602,10 +617,12 @@ struct StorageInfoRow: View {
       Spacer()
 
       Text(formatBytes(size))
-        .font(.bodySmall)
+        .font(.captionLarge)
         .foregroundColor(.textSecondary)
     }
-    .padding(.spacingM)
+    .padding(.horizontal, .spacingM)
+    .padding(.vertical, .spacingS + 4)
+    .background(Color.cardBackground)
   }
 
   private func formatBytes(_ bytes: Int64) -> String {

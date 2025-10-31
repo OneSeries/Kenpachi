@@ -236,7 +236,7 @@ struct QualityPicker: View {
                 .foregroundColor(.textPrimary)
 
               if quality == .auto {
-                Text("Adjusts based on connection")
+                Text("settings.quality.auto_description")
                   .font(.captionLarge)
                   .foregroundColor(.textSecondary)
               }

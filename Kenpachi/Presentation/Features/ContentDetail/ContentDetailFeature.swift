@@ -3,8 +3,8 @@
 // It manages the state and logic for displaying detailed information about a specific content item,
 // including its metadata, episodes, cast, and handling streaming link extraction.
 
-import ComposableArchitecture // Imports the Composable Architecture library for state management.
-import Foundation // Imports the Foundation framework for basic data types and functionality.
+import ComposableArchitecture  // Imports the Composable Architecture library for state management.
+import Foundation  // Imports the Foundation framework for basic data types and functionality.
 
 /// The `@Reducer` macro transforms the `ContentDetailFeature` struct into a reducer.
 @Reducer
@@ -41,7 +41,7 @@ struct ContentDetailFeature {
     var autoPlayTrailer = true
 
     /// The initializer for the `State` struct.
-      init(contentId: String, type: ContentType?) {
+    init(contentId: String, type: ContentType?) {
       self.contentId = contentId
       self.type = type
     }
@@ -49,8 +49,18 @@ struct ContentDetailFeature {
 
   /// The `Action` enum defines all the possible actions that can be performed on the `ContentDetailFeature`.
   enum Action: Equatable {
+    /// Delegate actions to communicate with parent
+    case delegate(Delegate)
     /// This action is triggered when the detail view appears on the screen.
     case onAppear
+
+    /// Delegate actions for parent communication
+    enum Delegate: Equatable {
+      /// Navigate to another content detail
+      case navigateToContent(String, ContentType?)
+      /// Dismiss the current detail
+      case dismiss
+    }
     /// This action initiates the loading of content details.
     case loadContentDetails
     /// This action is dispatched when the content details have been successfully loaded.
@@ -139,11 +149,12 @@ struct ContentDetailFeature {
 
         // Update the state with the similar content.
         state.similarContent = content.recommendations ?? []
-        
+
         // Return a side effect to check if the content is in the user's watchlist.
         return .run { [contentId = state.contentId] send in
           do {
-            let isInWatchlist = try await WatchlistManager.shared.isInWatchlist(contentId: contentId)
+            let isInWatchlist = try await WatchlistManager.shared.isInWatchlist(
+              contentId: contentId)
             await send(.watchlistStatusLoaded(isInWatchlist))
           } catch {
             // If an error occurs, log a warning message.
@@ -249,7 +260,7 @@ struct ContentDetailFeature {
       case .addToWatchlistTapped:
         // Optimistically update the UI to show the content in the watchlist.
         state.isInWatchlist = true
-        
+
         // Return a side effect to add the content to the watchlist.
         return .run { [contentId = state.contentId] send in
           do {
@@ -264,7 +275,7 @@ struct ContentDetailFeature {
       case .removeFromWatchlistTapped:
         // Optimistically update the UI to remove the content from the watchlist.
         state.isInWatchlist = false
-        
+
         // Return a side effect to remove the content from the watchlist.
         return .run { [contentId = state.contentId] send in
           do {
@@ -275,12 +286,12 @@ struct ContentDetailFeature {
             await send(.watchlistToggled(true))
           }
         }
-      
+
       case .watchlistStatusLoaded(let isInWatchlist):
         // Update the watchlist status in the state.
         state.isInWatchlist = isInWatchlist
         return .none
-      
+
       case .watchlistToggled(let isInWatchlist):
         // Confirm the watchlist toggle by updating the state.
         state.isInWatchlist = isInWatchlist
@@ -297,9 +308,8 @@ struct ContentDetailFeature {
         return .none
 
       case .similarContentTapped(let content):
-        // This is a placeholder for navigating to a similar content item.
-        // TODO: Implement navigation
-        return .none
+        // Send delegate action to parent to navigate to similar content
+        return .send(.delegate(.navigateToContent(content.id, content.type)))
 
       case .castMemberTapped(let cast):
         // This is a placeholder for showing cast member details.
@@ -309,6 +319,10 @@ struct ContentDetailFeature {
       case .dismissPlayer:
         // Set the flag to show the player to false.
         state.showPlayer = false
+        return .none
+
+      case .delegate:
+        // Delegate actions are handled by the parent feature
         return .none
       }
     }

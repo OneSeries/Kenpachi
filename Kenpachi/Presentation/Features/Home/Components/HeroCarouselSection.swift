@@ -32,17 +32,17 @@ struct HeroCarouselSection: View {
       }
       .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
       .frame(height: 500)
-      
+
       // Custom page indicator dots (Hotstar style)
-      HStack(spacing: 6) {
+      HStack(spacing: .spacingXS + 2) {
         ForEach(items.indices, id: \.self) { index in
           Circle()
             .fill(index == currentIndex ? Color.white : Color.white.opacity(0.4))
             .frame(width: index == currentIndex ? 8 : 6, height: index == currentIndex ? 8 : 6)
-            .animation(.easeInOut(duration: 0.3), value: currentIndex)
+            .animation(.standard, value: currentIndex)
         }
       }
-      .padding(.bottom, 16)
+      .padding(.bottom, .spacingM)
     }
     .frame(height: 500)
   }
@@ -69,22 +69,22 @@ struct HeroCarouselItem: View {
                 .frame(width: geometry.size.width, height: 500)
                 .clipped()
             case .failure:
-              Color.gray.opacity(0.3)
+              Color.surfaceBackground
                 .frame(width: geometry.size.width, height: 500)
                 .overlay(
                   Image(systemName: "photo")
-                    .font(.system(size: 50))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.displaySmall)
+                    .foregroundColor(.textTertiary)
                 )
             case .empty:
-              Color.gray.opacity(0.2)
+              Color.cardBackground
                 .frame(width: geometry.size.width, height: 500)
                 .overlay(
                   ProgressView()
-                    .tint(.white)
+                    .tint(.primaryBlue)
                 )
             @unknown default:
-              Color.gray.opacity(0.2)
+              Color.cardBackground
                 .frame(width: geometry.size.width, height: 500)
             }
           }
@@ -100,16 +100,16 @@ struct HeroCarouselItem: View {
             endPoint: .bottom
           )
           .frame(height: 120)
-          
+
           Spacer()
-          
+
           // Bottom strong gradient
           LinearGradient(
             colors: [
               Color.clear,
               Color.black.opacity(0.4),
               Color.black.opacity(0.8),
-              Color.black.opacity(0.95)
+              Color.black.opacity(0.95),
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -119,102 +119,109 @@ struct HeroCarouselItem: View {
         .frame(height: 500)
 
         // Content overlay
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: .spacingS) {
           // Metadata row
-          HStack(spacing: 8) {
+          HStack(spacing: .spacingS) {
             // Content type badge
-            HStack(spacing: 4) {
+            HStack(spacing: .spacingXS) {
               Image(systemName: item.type.iconName)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.captionLarge)
+                .fontWeight(.semibold)
               Text(item.type.displayName.uppercased())
-                .font(.system(size: 11, weight: .bold))
+                .font(.captionLarge)
+                .fontWeight(.bold)
                 .tracking(0.5)
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, .spacingS + 2)
+            .padding(.vertical, .spacingXS + 1)
             .background(Color.white.opacity(0.2))
-            .cornerRadius(4)
-            
+            .cornerRadius(.radiusS)
+
             // Year
             if let year = item.releaseYear {
               Text(year)
-                .font(.system(size: 13, weight: .medium))
+                .font(.labelMedium)
                 .foregroundColor(.white.opacity(0.8))
             }
-            
+
             // Rating
             if let rating = item.formattedRating {
-              HStack(spacing: 3) {
+              HStack(spacing: .spacingXS / 2) {
                 Image(systemName: "star.fill")
-                  .font(.system(size: 11))
-                  .foregroundColor(.yellow)
+                  .font(.captionLarge)
+                  .foregroundColor(.warning)
                 Text(rating)
-                  .font(.system(size: 13, weight: .medium))
+                  .font(.labelMedium)
                   .foregroundColor(.white.opacity(0.8))
               }
             }
           }
-          .padding(.bottom, 4)
+          .padding(.bottom, .spacingXS)
 
           // Title
           Text(item.title)
-            .font(.system(size: 28, weight: .bold))
+            .font(.displaySmall)
             .foregroundColor(.white)
             .lineLimit(2)
-            .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+            .shadow(color: .black.opacity(0.3), radius: .spacingXS, x: 0, y: 2)
 
           // Overview
           if let overview = item.overview, !overview.isEmpty {
             Text(overview)
-              .font(.system(size: 14))
+              .font(.bodyMedium)
               .foregroundColor(.white.opacity(0.85))
               .lineLimit(2)
-              .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-              .padding(.bottom, 4)
+              .shadow(color: .black.opacity(0.3), radius: .spacingXS / 2, x: 0, y: 1)
+              .padding(.bottom, .spacingXS)
           }
 
           // Action buttons
-          HStack(spacing: 10) {
+          HStack(spacing: .spacingS + 2) {
             // Play button (Hotstar style)
             Button(action: onPlayTapped) {
-              HStack(spacing: 8) {
+              HStack(spacing: .spacingS) {
                 Image(systemName: "play.fill")
-                  .font(.system(size: 14, weight: .bold))
-                Text("Watch Now")
-                  .font(.system(size: 15, weight: .bold))
+                  .font(.labelMedium)
+                  .fontWeight(.bold)
+                Text("content.watch_now")
+                  .font(.labelLarge)
+                  .fontWeight(.bold)
               }
               .foregroundColor(.black)
-              .padding(.horizontal, 28)
-              .padding(.vertical, 12)
+              .padding(.horizontal, .spacingL + 4)
+              .padding(.vertical, .spacingS + 4)
               .background(Color.white)
-              .cornerRadius(8)
+              .cornerRadius(.radiusM)
+              .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+              .overlay(
+                RoundedRectangle(cornerRadius: .radiusM)
+                  .stroke(Color.white.opacity(0.5), lineWidth: 1)
+              )
             }
 
             // Watchlist button
             Button(action: onWatchlistTapped) {
               Image(systemName: isInWatchlist ? "checkmark" : "plus")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.headlineSmall)
+                .fontWeight(.semibold)
                 .foregroundColor(.white)
                 .frame(width: 44, height: 44)
-                .background(Color.white.opacity(0.2))
-                .cornerRadius(8)
-            }
-            
-            // Share button
-            Button(action: {}) {
-              Image(systemName: "square.and.arrow.up")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.white.opacity(0.2))
-                .cornerRadius(8)
+                .background(
+                  Color.black.opacity(0.5)
+                    .overlay(Color.white.opacity(0.15))
+                )
+                .cornerRadius(.radiusM)
+                .overlay(
+                  RoundedRectangle(cornerRadius: .radiusM)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
             }
           }
-          .padding(.bottom, 50)
+          .padding(.bottom, .spacingXXL + 2)
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 20)
+        .padding(.horizontal, .spacingL - 4)
+        .padding(.bottom, .spacingL - 4)
       }
     }
     .buttonStyle(PlainButtonStyle())

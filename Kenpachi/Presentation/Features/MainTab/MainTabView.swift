@@ -56,24 +56,26 @@ struct MainTabView: View {
       item: $store.scope(state: \.contentDetail, action: \.contentDetail)
     ) { detailStore in
       NavigationStack {
-        ContentDetailView(store: detailStore)
-          .navigationBarTitleDisplayMode(.inline)
-          .toolbarBackground(.hidden, for: .navigationBar)
-          .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-              Button {
-                store.send(.contentDetail(.dismiss))
-              } label: {
-                Image(systemName: "chevron.left")
-                  .font(.title3.weight(.semibold))
-                  .foregroundColor(.white)
-                  .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+        WithViewStore(detailStore, observe: \.contentId) { viewStore in
+          ContentDetailView(store: detailStore)
+            .id(viewStore.state)  // Force view recreation when contentId changes
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+              ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                  store.send(.contentDetail(.presented(.delegate(.dismiss))))
+                } label: {
+                  Image(systemName: "chevron.left")
+                    .font(.headlineSmall)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.5), radius: .spacingXS / 2, x: 0, y: 1)
+                }
               }
             }
-          }
+        }
       }
     }
   }
 }
-
-

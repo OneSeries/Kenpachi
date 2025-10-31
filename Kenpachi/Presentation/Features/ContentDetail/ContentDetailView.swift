@@ -3,8 +3,8 @@
 // It provides a comprehensive and immersive user interface for displaying content information,
 // similar in style to the Disney+ application.
 
-import ComposableArchitecture // Imports the Composable Architecture library for state management.
-import SwiftUI // Imports the SwiftUI framework for building the user interface.
+import ComposableArchitecture  // Imports the Composable Architecture library for state management.
+import SwiftUI  // Imports the SwiftUI framework for building the user interface.
 
 /// The `ContentDetailView` struct defines the main view for the content detail screen.
 struct ContentDetailView: View {
@@ -20,13 +20,13 @@ struct ContentDetailView: View {
         // If the content is loading, show a loading view.
         if viewStore.isLoading {
           LoadingView()
-        // If there is an error message, show an error view.
+          // If there is an error message, show an error view.
         } else if let errorMessage = viewStore.errorMessage {
           ErrorView(
             message: errorMessage,
-            retryAction: { viewStore.send(.loadContentDetails) } // The retry button sends the `loadContentDetails` action.
+            retryAction: { viewStore.send(.loadContentDetails) }  // The retry button sends the `loadContentDetails` action.
           )
-        // If the content is loaded, display the main content.
+          // If the content is loaded, display the main content.
         } else if let content = viewStore.content {
           // A `GeometryReader` is used to get the size of the parent view.
           GeometryReader { geometry in
@@ -52,19 +52,19 @@ struct ContentDetailView: View {
                   onDownloadTapped: { viewStore.send(.downloadTapped) }
                 )
 
-                // This `VStack` contains the sections with content information.
-                VStack(alignment: .leading, spacing: .spacingXXL) {
-                  // The `ContentInfoSection` displays the title and metadata.
+                // Content sections (Hotstar style - tighter spacing)
+                VStack(alignment: .leading, spacing: .spacingL) {
+                  // Metadata section
                   ContentInfoSection(content: content)
-                    .padding(.horizontal, .spacingXL - 4)
+                    .padding(.horizontal, .spacingL - 4)
 
-                  // If there is an overview, display the `OverviewSection`.
+                  // Overview section
                   if let overview = content.overview, !overview.isEmpty {
                     OverviewSection(overview: overview)
-                      .padding(.horizontal, .spacingXL - 4)
+                      .padding(.horizontal, .spacingL - 4)
                   }
 
-                  // If the content is a TV show, display the `EpisodeListSection`.
+                  // Episodes section for TV shows
                   if content.type == .tvShow, let seasons = content.seasons, !seasons.isEmpty {
                     EpisodeListSection(
                       seasons: seasons,
@@ -73,59 +73,56 @@ struct ContentDetailView: View {
                       onSeasonSelected: { viewStore.send(.seasonSelected($0)) },
                       onEpisodeSelected: { viewStore.send(.episodeSelected($0)) }
                     )
-                    .padding(.horizontal, .spacingXL - 4)
                   }
 
-                  // If there is cast information, display the `CastSection`.
+                  // Cast section
                   if let cast = content.cast, !cast.isEmpty {
                     CastSection(
                       cast: cast,
                       onCastTapped: { viewStore.send(.castMemberTapped($0)) }
                     )
-                    .padding(.horizontal, .spacingXL - 4)
                   }
 
-                  // If there are recommendations, display the `SimilarContentSection`.
+                  // Similar content section
                   if let recommendations = content.recommendations, !recommendations.isEmpty {
                     SimilarContentSection(
                       content: recommendations,
                       onContentTapped: { viewStore.send(.similarContentTapped($0)) }
                     )
-                    .padding(.horizontal, .spacingXL - 4)
                   }
                 }
-                .padding(.top, .spacingL)
-                .padding(.bottom, 60)
+                .padding(.top, .spacingL - 4)
+                .padding(.bottom, .spacingXXL + 12)
               }
             }
-            .scrollIndicators(.hidden) // The scroll indicators are hidden.
+            .scrollIndicators(.hidden)  // The scroll indicators are hidden.
           }
-          .ignoresSafeArea(edges: .top) // The view ignores the top safe area to create an immersive layout.
+          .ignoresSafeArea(edges: .top)  // The view ignores the top safe area to create an immersive layout.
         }
-        
+
         // If streaming links are being loaded, show a loading overlay.
         if viewStore.isLoadingLinks {
           ZStack {
-            Color.black.opacity(0.6)
+            Color.overlay
               .ignoresSafeArea()
-            
+
             VStack(spacing: .spacingL) {
               ProgressView()
                 .scaleEffect(1.5)
-                .tint(.white)
-              
-              Text("Extracting streaming links...")
+                .tint(.primaryBlue)
+
+              Text("player.extracting_links")
                 .font(.bodyMedium)
                 .foregroundColor(.white)
             }
           }
         }
       }
-      .background(Color.appBackground) // The background color of the view.
-      .navigationBarTitleDisplayMode(.inline) // The navigation bar title is displayed inline.
-      .disabled(viewStore.isLoadingLinks) // The view is disabled while loading links.
+      .background(Color.appBackground)  // The background color of the view.
+      .navigationBarTitleDisplayMode(.inline)  // The navigation bar title is displayed inline.
+      .disabled(viewStore.isLoadingLinks)  // The view is disabled while loading links.
       .onAppear {
-        viewStore.send(.onAppear) // When the view appears, send the `onAppear` action.
+        viewStore.send(.onAppear)  // When the view appears, send the `onAppear` action.
       }
       .fullScreenCover(
         isPresented: viewStore.binding(
@@ -152,21 +149,21 @@ struct ContentDetailView: View {
   }
 }
 
-// MARK: - Immersive Header View
+// MARK: - Immersive Header View (Hotstar Style)
 /// A private view for the immersive header, displaying the backdrop image and action buttons.
 struct ImmersiveHeaderView: View {
-  let content: Content // The content to display.
-  let geometry: GeometryProxy // The geometry proxy for dynamic sizing.
-  let isInWatchlist: Bool // A boolean indicating if the content is in the watchlist.
-  let onPlayTapped: () -> Void // The action for the play button.
-  let onTrailerTapped: () -> Void // The action for the trailer button.
-  let onWatchlistTapped: () -> Void // The action for the watchlist button.
-  let onShareTapped: () -> Void // The action for the share button.
-  let onDownloadTapped: () -> Void // The action for the download button.
+  let content: Content  // The content to display.
+  let geometry: GeometryProxy  // The geometry proxy for dynamic sizing.
+  let isInWatchlist: Bool  // A boolean indicating if the content is in the watchlist.
+  let onPlayTapped: () -> Void  // The action for the play button.
+  let onTrailerTapped: () -> Void  // The action for the trailer button.
+  let onWatchlistTapped: () -> Void  // The action for the watchlist button.
+  let onShareTapped: () -> Void  // The action for the share button.
+  let onDownloadTapped: () -> Void  // The action for the download button.
 
   var body: some View {
     ZStack(alignment: .bottom) {
-      // If a backdrop URL is available, display the backdrop image.
+      // Backdrop image with proper aspect ratio
       if let backdropURL = content.fullBackdropURL {
         AsyncImage(url: backdropURL) { image in
           image
@@ -174,233 +171,216 @@ struct ImmersiveHeaderView: View {
             .aspectRatio(contentMode: .fill)
         } placeholder: {
           Rectangle()
-            .fill(Color.gray.opacity(0.2))
+            .fill(Color.gray.opacity(0.15))
         }
-        .frame(width: geometry.size.width, height: 500)
+        .frame(width: geometry.size.width, height: 450)
         .clipped()
       } else {
         Rectangle()
-          .fill(Color.gray.opacity(0.2))
-          .frame(width: geometry.size.width, height: 500)
+          .fill(Color.cardBackground)
+          .frame(width: geometry.size.width, height: 450)
       }
 
-      // A multi-layer gradient to create a depth effect.
+      // Multi-layer gradient overlay (Hotstar style)
       VStack(spacing: 0) {
-        // A gradient at the top to fade into the background.
         LinearGradient(
-          colors: [Color.appBackground.opacity(0.6), .clear],
+          colors: [Color.black.opacity(0.5), .clear],
           startPoint: .top,
           endPoint: .bottom
         )
-        .frame(height: 150)
+        .frame(height: 120)
 
         Spacer()
 
-        // A stronger gradient at the bottom to blend with the content.
         LinearGradient(
-          colors: [.clear, Color.appBackground.opacity(0.7), Color.appBackground],
+          colors: [
+            .clear,
+            Color.appBackground.opacity(0.5),
+            Color.appBackground.opacity(0.9),
+            Color.appBackground,
+          ],
           startPoint: .top,
           endPoint: .bottom
         )
-        .frame(height: 250)
+        .frame(height: 200)
       }
-      .frame(height: 500)
+      .frame(height: 450)
 
-      // An overlay containing the content logo and action buttons.
-      VStack(spacing: .spacingXL - 4) {
-        // If a poster URL is available, display the poster image as a logo.
-        if let posterURL = content.fullPosterURL {
-          AsyncImage(url: posterURL) { image in
-            image
-              .resizable()
-              .aspectRatio(contentMode: .fit)
-          } placeholder: {
-            EmptyView()
-          }
-          .frame(width: 200, height: 120)
-          .shadow(color: Color.appBackground.opacity(0.5), radius: 10, x: 0, y: 5)
-        }
+      // Content overlay with title and buttons (Hotstar style)
+      VStack(alignment: .leading, spacing: .spacingM) {
+        // Title
+        Text(content.title)
+          .font(.displaySmall)
+          .fontWeight(.bold)
+          .foregroundColor(.white)
+          .lineLimit(2)
+          .shadow(color: .black.opacity(0.3), radius: .spacingXS, x: 0, y: 2)
+          .padding(.horizontal, .spacingL - 4)
 
-        // A `VStack` for the action buttons.
-        VStack(spacing: .spacingM - 2) {
-          // The primary play button.
+        // Action buttons row (Hotstar style - horizontal)
+        HStack(spacing: .spacingS + 4) {
+          // Watch Now button (primary)
           Button(action: onPlayTapped) {
-            HStack(spacing: .spacingS + 2) {
+            HStack(spacing: .spacingS) {
               Image(systemName: "play.fill")
+                .font(.labelMedium)
+                .fontWeight(.bold)
+              Text("content.watch_now")
                 .font(.labelLarge)
-              Text("content.play.button")
-                .font(.labelLarge)
+                .fontWeight(.bold)
             }
+            .foregroundColor(.black)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(Color.primaryBlue)
-            .foregroundColor(.white)
+            .frame(height: 48)
+            .background(Color.white)
             .cornerRadius(.radiusM)
+            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            .overlay(
+              RoundedRectangle(cornerRadius: .radiusM)
+                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+            )
           }
-          .padding(.horizontal, .spacingXL - 4)
 
-          // A row of secondary action buttons.
-          HStack(spacing: .spacingM) {
-            // The watchlist button.
-            ActionButton(
-              icon: isInWatchlist ? "checkmark" : "plus",
-              title: isInWatchlist ? "Watchlist" : "Watchlist",
-              action: onWatchlistTapped
-            )
-
-            // The download button.
-            ActionButton(
-              icon: "arrow.down.to.line",
-              title: "Download",
-              action: onDownloadTapped
-            )
-
-            // The trailer button, only shown if a trailer URL is available.
-            if content.trailerUrl != nil {
-              ActionButton(
-                icon: "play.rectangle",
-                title: "Trailer",
-                action: onTrailerTapped
+          // Watchlist button
+          Button(action: onWatchlistTapped) {
+            Image(systemName: isInWatchlist ? "checkmark" : "plus")
+              .font(.headlineSmall)
+              .fontWeight(.semibold)
+              .foregroundColor(.white)
+              .frame(width: 48, height: 48)
+              .background(
+                Color.black.opacity(0.5)
+                  .overlay(Color.white.opacity(0.15))
               )
-            }
+              .cornerRadius(.radiusM)
+              .overlay(
+                RoundedRectangle(cornerRadius: .radiusM)
+                  .stroke(Color.white.opacity(0.3), lineWidth: 1)
+              )
           }
-          .padding(.horizontal, .spacingXL - 4)
+
+          // Download button
+          Button(action: onDownloadTapped) {
+            Image(systemName: "arrow.down.circle")
+              .font(.headlineSmall)
+              .fontWeight(.semibold)
+              .foregroundColor(.white)
+              .frame(width: 48, height: 48)
+              .background(
+                Color.black.opacity(0.5)
+                  .overlay(Color.white.opacity(0.15))
+              )
+              .cornerRadius(.radiusM)
+              .overlay(
+                RoundedRectangle(cornerRadius: .radiusM)
+                  .stroke(Color.white.opacity(0.3), lineWidth: 1)
+              )
+          }
         }
+        .padding(.horizontal, .spacingL - 4)
+        .padding(.bottom, .spacingL)
       }
-      .padding(.bottom, .spacingL)
     }
-    .frame(height: 500)
+    .frame(height: 450)
   }
 }
 
-// MARK: - Action Button
-/// A private view for the secondary action buttons.
-struct ActionButton: View {
-  let icon: String // The name of the icon for the button.
-  let title: String // The title of the button.
-  let action: () -> Void // The action to perform when the button is tapped.
-
-  var body: some View {
-    Button(action: action) {
-      VStack(spacing: .spacingXS + 2) {
-        Image(systemName: icon)
-          .font(.title3)
-        Text(title)
-          .font(.labelSmall)
-      }
-      .frame(maxWidth: .infinity)
-      .frame(height: 70)
-      .background(Color.cardBackground)
-      .foregroundColor(Color.textPrimary)
-      .cornerRadius(.radiusM + 2)
-    }
-  }
-}
-
-// MARK: - Content Info Section
+// MARK: - Content Info Section (Hotstar Style)
 /// A private view for displaying the content's metadata.
 struct ContentInfoSection: View {
-  let content: Content // The content to display.
+  let content: Content  // The content to display.
 
   var body: some View {
-    VStack(alignment: .leading, spacing: .spacingS) {
-      // A row of metadata with improved spacing.
+    VStack(alignment: .leading, spacing: .spacingS + 4) {
+      // Metadata row (Hotstar style - compact)
       HStack(spacing: .spacingS) {
         if let year = content.releaseYear {
           Text(year)
-            .foregroundColor(Color.textSecondary)
+            .font(.labelMedium)
+            .foregroundColor(.textSecondary)
         }
 
         if let rating = content.formattedRating {
-          HStack(spacing: .spacingXS) {
+          HStack(spacing: .spacingXS / 2) {
             Image(systemName: "star.fill")
               .font(.captionLarge)
               .foregroundColor(.warning)
             Text(rating)
-              .foregroundColor(Color.textSecondary)
+              .font(.labelMedium)
+              .foregroundColor(.textSecondary)
           }
         }
 
         if let runtime = content.formattedRuntime {
-          Text("content.separator")
-            .foregroundColor(Color.textSecondary)
+          Text("•")
+            .foregroundColor(.textTertiary)
           Text(runtime)
-            .foregroundColor(Color.textSecondary)
+            .font(.labelMedium)
+            .foregroundColor(.textSecondary)
         }
 
         if content.adult {
-          Text("content.adult.label")
-            .font(.captionMedium.bold())
-            .padding(.horizontal, .spacingS)
-            .padding(.vertical, 3)
-            .background(Color.error)
+          Text("18+")
+            .font(.captionLarge)
+            .fontWeight(.bold)
             .foregroundColor(.white)
-            .cornerRadius(.radiusS)
+            .padding(.horizontal, .spacingXS + 2)
+            .padding(.vertical, .spacingXS / 2)
+            .background(Color.error)
+            .cornerRadius(.radiusS / 2)
         }
       }
-      .font(.labelMedium)
 
-      // If genres are available, display them in a horizontally scrollable view.
+      // Genres (Hotstar style - pill badges)
       if let genres = content.genres, !genres.isEmpty {
         ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: .spacingS + 2) {
-            ForEach(genres) { genre in
+          HStack(spacing: .spacingS) {
+            ForEach(genres.prefix(5)) { genre in
               Text(genre.name)
-                .font(.bodySmall)
-                .foregroundColor(Color.textPrimary)
-                .padding(.horizontal, .spacingM - 2)
-                .padding(.vertical, 7)
+                .font(.labelSmall)
+                .foregroundColor(.textSecondary)
+                .padding(.horizontal, .spacingS + 4)
+                .padding(.vertical, .spacingXS + 2)
                 .background(Color.cardBackground)
-                .cornerRadius(.radiusXL)
+                .cornerRadius(.radiusL)
             }
           }
         }
-      }
-
-      // If a tagline is available, display it.
-      if let tagline = content.tagline, !tagline.isEmpty {
-        Text(tagline)
-          .font(.bodyMedium)
-          .foregroundColor(Color.textSecondary)
-          .italic()
       }
     }
   }
 }
 
-// MARK: - Overview Section
+// MARK: - Overview Section (Hotstar Style)
 /// A private view for displaying the content's overview.
 struct OverviewSection: View {
-  let overview: String // The overview text.
-  @State private var isExpanded = false // A state variable to control whether the full text is shown.
+  let overview: String  // The overview text.
+  @State private var isExpanded = false  // A state variable to control whether the full text is shown.
 
   var body: some View {
-    VStack(alignment: .leading, spacing: .spacingS) {
-      Text("content.synopsis.title")
+    VStack(alignment: .leading, spacing: .spacingS + 2) {
+      Text("content.about")
         .font(.headlineSmall)
-        .foregroundColor(Color.textPrimary)
+        .foregroundColor(.textPrimary)
 
       Text(overview)
         .font(.bodyMedium)
-        .foregroundColor(Color.textSecondary)
+        .foregroundColor(.textSecondary)
         .lineSpacing(.spacingXS)
-        .lineLimit(isExpanded ? nil : 4) // The text is limited to 4 lines by default.
-        .animation(.easeInOut(duration: 0.3), value: isExpanded)
+        .lineLimit(isExpanded ? nil : 3)
+        .animation(.quick, value: isExpanded)
 
-      // If the overview is long, show a "Read More" button.
-      if overview.count > 200 {
+      // Show "More" button if text is long
+      if overview.count > 150 {
         Button(action: {
-          withAnimation {
+          withAnimation(.standard) {
             isExpanded.toggle()
           }
         }) {
-          HStack(spacing: .spacingXS) {
-            Text(isExpanded ? "content.read_less.button" : "content.read_more.button")
-              .font(.labelMedium)
-            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-              .font(.labelSmall)
-          }
-          .foregroundColor(Color.primaryBlue)
+          Text(isExpanded ? "content.less" : "content.more")
+            .font(.labelMedium)
+            .fontWeight(.semibold)
+            .foregroundColor(.primaryBlue)
         }
       }
     }

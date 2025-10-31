@@ -433,7 +433,7 @@ struct DisneySettingsPanel: View {
         VStack(spacing: 0) {
           /// Header
           HStack {
-            Text("Settings")
+            Text("player.settings")
               .font(.headline)
               .foregroundColor(.white)
             
@@ -551,7 +551,7 @@ struct ErrorOverlay: View {
         .font(.system(size: 50))
         .foregroundColor(.red)
       
-      Text("Playback Error")
+      Text("player.error.title")
         .font(.title2.bold())
         .foregroundColor(.white)
       
@@ -562,7 +562,7 @@ struct ErrorOverlay: View {
         .padding(.horizontal, 40)
       
       Button(action: onDismiss) {
-        Text("Close")
+        Text("player.close")
           .font(.headline)
           .foregroundColor(.white)
           .padding(.horizontal, 32)

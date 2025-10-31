@@ -15,28 +15,16 @@ struct SearchView: View {
     WithViewStore(store, observe: { $0 }) { viewStore in
       NavigationStack {
         VStack(spacing: 0) {
-          /// Search bar
+          /// Search bar (Hotstar style - simplified)
           SearchBar(
             text: viewStore.binding(
               get: \.searchQuery,
               send: { .searchQueryChanged($0) }
             ),
-            isFocused: $isSearchFocused,
-            onFiltersTapped: { viewStore.send(.showFiltersTapped) }
+            isFocused: $isSearchFocused
           )
-          .padding(.horizontal, .spacingM)
-          .padding(.vertical, .spacingS)
-
-          /// Active filters display
-          if viewStore.selectedContentType != nil || viewStore.selectedGenre != nil {
-            ActiveFiltersView(
-              contentType: viewStore.selectedContentType,
-              genre: viewStore.selectedGenre,
-              onClearFilters: { viewStore.send(.clearFilters) }
-            )
-            .padding(.horizontal, .spacingM)
-            .padding(.bottom, .spacingS)
-          }
+          .padding(.horizontal, 16)
+          .padding(.vertical, 12)
 
           /// Content area
           if viewStore.searchQuery.isEmpty {
@@ -101,50 +89,42 @@ struct SearchView: View {
   }
 }
 
-// MARK: - Search Bar
+// MARK: - Search Bar (Hotstar Style - Simplified)
 struct SearchBar: View {
   /// Search text binding
   @Binding var text: String
   /// Focus state binding
   var isFocused: FocusState<Bool>.Binding
-  /// Filters button action
-  let onFiltersTapped: () -> Void
 
   var body: some View {
-    HStack(spacing: .spacingS) {
-      /// Search field
-      HStack(spacing: .spacingS) {
-        Image(systemName: "magnifyingglass")
-          .foregroundColor(Color.textSecondary)
+    /// Search field (Hotstar style - full width)
+    HStack(spacing: .spacingS + 2) {
+      Image(systemName: "magnifyingglass")
+        .font(.labelMedium)
+        .foregroundColor(.textSecondary)
 
-        TextField("search.placeholder", text: $text)
-          .focused(isFocused)
-          .textFieldStyle(PlainTextFieldStyle())
-          .foregroundColor(Color.textPrimary)
+      TextField("Search movies, shows, sports...", text: $text)
+        .focused(isFocused)
+        .textFieldStyle(PlainTextFieldStyle())
+        .foregroundColor(.textPrimary)
+        .font(.bodyMedium)
 
-        if !text.isEmpty {
-          Button(action: { text = "" }) {
-            Image(systemName: "xmark.circle.fill")
-              .foregroundColor(Color.textSecondary)
-          }
+      if !text.isEmpty {
+        Button(action: { text = "" }) {
+          Image(systemName: "xmark.circle.fill")
+            .font(.labelMedium)
+            .foregroundColor(.textSecondary)
         }
       }
-      .padding(.horizontal, .spacingS)
-      .padding(.vertical, .spacingS + 2)
-      .background(Color.surfaceBackground)
-      .cornerRadius(.radiusM + 2)
-
-      /// Filters button
-      Button(action: onFiltersTapped) {
-        Image(systemName: "line.3.horizontal.decrease.circle")
-          .font(.title2)
-          .foregroundColor(Color.primaryBlue)
-      }
     }
+    .padding(.horizontal, .spacingM - 2)
+    .padding(.vertical, .spacingS + 4)
+    .background(Color.cardBackground)
+    .cornerRadius(.radiusM)
   }
 }
 
-// MARK: - Active Filters View
+// MARK: - Active Filters View (Hotstar Style)
 struct ActiveFiltersView: View {
   /// Selected content type
   let contentType: ContentType?
@@ -154,11 +134,7 @@ struct ActiveFiltersView: View {
   let onClearFilters: () -> Void
 
   var body: some View {
-    HStack(spacing: 8) {
-      Text("filters.label")
-        .font(.captionLarge)
-        .foregroundColor(Color.textSecondary)
-
+    HStack(spacing: .spacingS) {
       if let contentType = contentType {
         FilterChip(
           text: contentType.displayName,
@@ -176,15 +152,15 @@ struct ActiveFiltersView: View {
       Spacer()
 
       Button(action: onClearFilters) {
-        Text("search.clear.button")
-          .font(.captionLarge)
-          .foregroundColor(Color.primaryBlue)
+        Text("common.clear")
+          .font(.labelMedium)
+          .foregroundColor(.primaryBlue)
       }
     }
   }
 }
 
-// MARK: - Filter Chip
+// MARK: - Filter Chip (Hotstar Style)
 struct FilterChip: View {
   /// Chip text
   let text: String
@@ -192,24 +168,25 @@ struct FilterChip: View {
   let onRemove: () -> Void
 
   var body: some View {
-    HStack(spacing: .spacingXS) {
+    HStack(spacing: .spacingXS + 2) {
       Text(text)
-        .font(.captionLarge)
+        .font(.labelMedium)
 
       Button(action: onRemove) {
         Image(systemName: "xmark")
-          .font(.captionSmall)
+          .font(.captionLarge)
+          .fontWeight(.semibold)
       }
     }
-    .padding(.horizontal, .spacingS + 2)
+    .foregroundColor(.white)
+    .padding(.horizontal, .spacingS + 4)
     .padding(.vertical, .spacingXS + 2)
-    .background(Color.primaryBlue.opacity(0.15))
-    .foregroundColor(Color.primaryBlue)
-    .cornerRadius(.spacingM)
+    .background(Color.primaryBlue)
+    .cornerRadius(.radiusL)
   }
 }
 
-// MARK: - Empty Search State
+// MARK: - Empty Search State (Hotstar Style)
 struct EmptySearchState: View {
   /// Recent searches
   let recentSearches: [String]
@@ -227,88 +204,83 @@ struct EmptySearchState: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: .spacingL) {
-        /// Recent searches
+        /// Recent searches (as pills)
         if !recentSearches.isEmpty {
-          VStack(alignment: .leading, spacing: .spacingS) {
+          VStack(alignment: .leading, spacing: .spacingS + 4) {
             HStack {
               Text("search.recent.title")
                 .font(.headlineSmall)
-                .foregroundColor(Color.textPrimary)
+                .foregroundColor(.textPrimary)
 
               Spacer()
 
               Button(action: onClearRecentSearches) {
-                Text("search.clear.button")
-                  .font(.bodySmall)
-                  .foregroundColor(Color.primaryBlue)
+                Text("search.clear_all")
+                  .font(.labelMedium)
+                  .foregroundColor(.primaryBlue)
               }
             }
-
-            ForEach(recentSearches, id: \.self) { query in
-              Button(action: { onRecentSearchTapped(query) }) {
-                HStack {
-                  Image(systemName: "clock.arrow.circlepath")
-                    .foregroundColor(Color.textSecondary)
-                  Text(query)
-                    .foregroundColor(Color.textPrimary)
-                  Spacer()
-                  Image(systemName: "arrow.up.left")
-                    .foregroundColor(Color.textSecondary)
-                }
-                .padding(.vertical, .spacingS)
-              }
-              .buttonStyle(PlainButtonStyle())
-            }
-          }
-        }
-
-        /// Trending searches
-        if !trendingSearches.isEmpty {
-          VStack(alignment: .leading, spacing: .spacingS) {
-            Text("search.trending.title")
-              .font(.headlineSmall)
-              .foregroundColor(Color.textPrimary)
 
             FlowLayout(spacing: .spacingS) {
-              ForEach(trendingSearches, id: \.self) { query in
+              ForEach(recentSearches, id: \.self) { query in
                 Button(action: { onRecentSearchTapped(query) }) {
                   Text(query)
-                    .font(.bodySmall)
-                    .foregroundColor(Color.textPrimary)
-                    .padding(.horizontal, .spacingM)
+                    .font(.labelMedium)
+                    .foregroundColor(.textPrimary)
+                    .padding(.horizontal, .spacingM - 2)
                     .padding(.vertical, .spacingS)
                     .background(Color.cardBackground)
-                    .cornerRadius(.radiusXL)
+                    .cornerRadius(.radiusL)
                 }
                 .buttonStyle(PlainButtonStyle())
               }
             }
           }
         }
-
-        /// Popular content
+        
+        /// Popular content with titles
         if !popularContent.isEmpty {
-          VStack(alignment: .leading, spacing: .spacingS) {
+          VStack(alignment: .leading, spacing: .spacingS + 4) {
             Text("search.popular.title")
               .font(.headlineSmall)
-              .foregroundColor(Color.textPrimary)
+              .foregroundColor(.textPrimary)
 
             LazyVGrid(
               columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible()),
-                GridItem(.flexible()),
+                GridItem(.flexible(), spacing: .spacingS + 4),
+                GridItem(.flexible(), spacing: .spacingS + 4),
+                GridItem(.flexible(), spacing: .spacingS + 4),
               ],
               spacing: .spacingM
             ) {
               ForEach(popularContent) { content in
                 ContentPosterCard(
                   content: content,
-                  onTapped: { onContentTapped(content) }
+                  onTapped: { onContentTapped(content) },
+                  width: 110,
+                  showTitle: true
                 )
               }
             }
           }
+        } else if recentSearches.isEmpty {
+          /// Empty state when no popular content and no recent searches
+          VStack(spacing: .spacingM) {
+            Spacer()
+
+            Image(systemName: "magnifyingglass")
+              .font(.system(size: 60))
+              .foregroundColor(.textTertiary)
+
+            Text("search.empty.message")
+              .font(.headlineSmall)
+              .foregroundColor(.textSecondary)
+              .multilineTextAlignment(.center)
+
+            Spacer()
+          }
+          .frame(maxWidth: .infinity)
+          .padding(.top, 100)
         }
       }
       .padding(.spacingM)

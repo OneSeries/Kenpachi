@@ -11,49 +11,53 @@ struct ContentRowSection: View {
   @State private var showAllContent = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
+    VStack(alignment: .leading, spacing: .spacingM) {
       if !title.isEmpty {
         HStack {
           Text(title)
-            .font(.system(size: 20, weight: .bold))
-            .foregroundColor(.white)
+            .font(.headlineSmall)
+            .foregroundColor(.textPrimary)
 
           Spacer()
 
-          // "See All" button
+          // "See All" button (Hotstar style)
           Button(action: {
             showAllContent = true
           }) {
-            HStack(spacing: 4) {
-              Text("See All")
-                .font(.system(size: 14, weight: .medium))
+            HStack(spacing: .spacingXS) {
+              Text("content.see_all")
+                .font(.labelMedium)
               Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.captionLarge)
+                .fontWeight(.semibold)
             }
-            .foregroundColor(.white.opacity(0.7))
+            .foregroundColor(.textSecondary)
           }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, .spacingM)
+        .padding(.bottom, .spacingS)
       }
 
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 16) {
+        HStack(spacing: .spacingS + 4) {
           ForEach(items) { item in
             ContentPosterCard(
               content: item,
               onTapped: {
                 onItemTapped(item)
-              }
+              },
+              width: 110,
+              showTitle: true
             )
             .accessibilityElement(children: .combine)
             .accessibilityLabel(item.title)
             .accessibilityHint("Double tap to see details")
           }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, .spacingM)
       }
     }
-    .padding(.vertical, 12)
+    .padding(.vertical, .spacingS + 4)
     .sheet(isPresented: $showAllContent) {
       SeeAllContentView(
         title: title,
@@ -78,9 +82,9 @@ struct SeeAllContentView: View {
   let onDismiss: () -> Void
 
   private let columns = [
-    GridItem(.flexible(), spacing: 16),
-    GridItem(.flexible(), spacing: 16),
-    GridItem(.flexible(), spacing: 16),
+    GridItem(.flexible(), spacing: .spacingM),
+    GridItem(.flexible(), spacing: .spacingM),
+    GridItem(.flexible(), spacing: .spacingM),
   ]
 
   var body: some View {
@@ -89,17 +93,19 @@ struct SeeAllContentView: View {
         Color.appBackground.ignoresSafeArea()
 
         ScrollView {
-          LazyVGrid(columns: columns, spacing: 20) {
+          LazyVGrid(columns: columns, spacing: .spacingM) {
             ForEach(items) { item in
               ContentPosterCard(
                 content: item,
                 onTapped: {
                   onItemTapped(item)
-                }
+                },
+                width: 110,
+                showTitle: true
               )
             }
           }
-          .padding(16)
+          .padding(.spacingM)
         }
       }
       .navigationTitle(title)
@@ -108,8 +114,8 @@ struct SeeAllContentView: View {
         ToolbarItem(placement: .navigationBarTrailing) {
           Button(action: onDismiss) {
             Image(systemName: "xmark.circle.fill")
-              .font(.system(size: 24))
-              .foregroundColor(.white.opacity(0.7))
+              .font(.headlineLarge)
+              .foregroundColor(.textSecondary)
           }
         }
       }

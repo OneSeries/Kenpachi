@@ -141,6 +141,16 @@ struct MainTabFeature {
         state.contentDetail = ContentDetailFeature.State(contentId: contentId, type: type)
         return .none
 
+      case .contentDetail(.presented(.delegate(.navigateToContent(let contentId, let type)))):
+        // Navigate to another content detail (replace current)
+        state.contentDetail = ContentDetailFeature.State(contentId: contentId, type: type)
+        return .none
+        
+      case .contentDetail(.presented(.delegate(.dismiss))):
+        // Dismiss content detail
+        state.contentDetail = nil
+        return .none
+
       case .contentDetail:
         // Handled by ContentDetailFeature
         return .none

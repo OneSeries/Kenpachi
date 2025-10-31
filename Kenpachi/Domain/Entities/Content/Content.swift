@@ -205,3 +205,42 @@ extension Content {
         }
     }
 }
+
+// MARK: - Preview Data
+extension Content {
+    /// Sample content for SwiftUI previews
+    static let preview = Content(
+        id: "preview-1",
+        type: .movie,
+        title: "Sample Movie",
+        originalTitle: "Sample Movie",
+        overview: "This is a sample movie for preview purposes. It demonstrates how content cards and details will look in the app.",
+        posterPath: nil,
+        backdropPath: nil,
+        releaseDate: Date(),
+        voteAverage: 8.5,
+        voteCount: 1000,
+        popularity: 100.0,
+        originalLanguage: "en",
+        genreIds: [28, 12],
+        genres: [
+            Genre(id: 28, name: "Action"),
+            Genre(id: 12, name: "Adventure")
+        ],
+        adult: false,
+        rating: "PG-13",
+        runtime: 150,
+        numberOfSeasons: nil,
+        numberOfEpisodes: nil,
+        status: "Released",
+        tagline: "An epic adventure awaits",
+        homepage: nil,
+        productionCompanies: ["Sample Studios"],
+        seasons: nil,
+        cast: nil,
+        trailerUrl: nil,
+        country: "US",
+        duration: "2h 30m",
+        recommendations: nil
+    )
+}

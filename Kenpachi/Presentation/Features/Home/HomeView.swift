@@ -33,7 +33,7 @@ struct HomeView: View {
         // A `ScrollView` is used to allow the content to be scrolled vertically.
         ScrollView(.vertical, showsIndicators: false) {
           // A `VStack` is used to arrange the content vertically.
-          VStack(spacing: 24) {
+          VStack(spacing: .spacingL + 4) {
             // The view iterates over the `contentCarousels` array to create the content sections.
             ForEach(store.contentCarousels) { carousel in
               // If the carousel type is `.hero`, create a `HeroCarouselSection`.
@@ -59,7 +59,43 @@ struct HomeView: View {
                     store.send(.watchlistTapped(content))
                   }
                 )
-                .padding(.bottom, 4)
+                .padding(.bottom, .spacingXS)
+                
+                // Display "My Watchlist" section immediately after hero carousel
+                if !store.watchlistItems.isEmpty {
+                  VStack(alignment: .leading, spacing: .spacingM) {
+                    HStack {
+                      Text("myspace.watchlist.title")
+                        .font(.headlineSmall)
+                        .foregroundColor(.textPrimary)
+
+                      Spacer()
+                      
+                      // Display a badge with the name of the active scraper.
+                      Text(ScraperManager.shared.getActiveScraper()?.name ?? "")
+                        .font(.captionLarge)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, .spacingS)
+                        .padding(.vertical, .spacingXS)
+                        .background(Color.primaryBlue.opacity(0.7))
+                        .cornerRadius(.radiusS)
+                    }
+                    .padding(.horizontal, .spacingM)
+                    .padding(.bottom, .spacingS)
+
+                    // Display the watchlist items in a `ContentRowSection`.
+                    ContentRowSection(
+                      title: "",
+                      items: store.watchlistItems,
+                      onItemTapped: { content in
+                        store.send(.contentTapped(content))
+                      }
+                    )
+                  }
+                  .padding(.top, .spacingXS)
+                }
+                
                 // Otherwise, create a `ContentRowSection`.
               } else {
                 ContentRowSection(
@@ -71,39 +107,6 @@ struct HomeView: View {
                   }
                 )
               }
-            }
-
-            // If there are items in the watchlist, display the "My Watchlist" section.
-            if !store.watchlistItems.isEmpty {
-              VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                  Text("My Watchlist")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-
-                  Spacer()
-                  
-                  // Display a badge with the name of the active scraper.
-                  Text(ScraperManager.shared.getActiveScraper()?.name ?? "")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.primaryBlue.opacity(0.8))
-                    .cornerRadius(4)
-                }
-                .padding(.horizontal, 16)
-
-                // Display the watchlist items in a `ContentRowSection`.
-                ContentRowSection(
-                  title: "",
-                  items: store.watchlistItems,
-                  onItemTapped: { content in
-                    store.send(.contentTapped(content))
-                  }
-                )
-              }
-              .padding(.top, 4)
             }
 
             // A spacer to add some extra space at the bottom of the scroll view.
@@ -121,16 +124,16 @@ struct HomeView: View {
       // If the app is currently extracting streaming links, show a loading overlay.
       if store.isLoadingPlay {
         ZStack {
-          Color.black.opacity(0.6)
+          Color.overlay
             .ignoresSafeArea()
 
-          VStack(spacing: 16) {
+          VStack(spacing: .spacingM) {
             ProgressView()
               .scaleEffect(1.5)
-              .tint(.white)
+              .tint(.primaryBlue)
 
-            Text("Loading video...")
-              .font(.subheadline)
+            Text("player.loading")
+              .font(.bodyMedium)
               .foregroundColor(.white)
           }
         }

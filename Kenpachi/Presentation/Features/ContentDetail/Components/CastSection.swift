@@ -11,11 +11,12 @@ struct CastSection: View {
     let onCastTapped: (Cast) -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: .spacingS) {
-            /// Section title
-            Text("cast.crew.title")
+        VStack(alignment: .leading, spacing: .spacingS + 4) {
+            /// Section title (Hotstar style)
+            Text("content.cast_crew")
                 .font(.headlineSmall)
-                .foregroundColor(Color.textPrimary)
+                .foregroundColor(.textPrimary)
+                .padding(.horizontal, .spacingL - 4)
             
             /// Horizontal scrolling cast list
             ScrollView(.horizontal, showsIndicators: false) {
@@ -27,12 +28,13 @@ struct CastSection: View {
                         )
                     }
                 }
+                .padding(.horizontal, .spacingL - 4)
             }
         }
     }
 }
 
-// MARK: - Cast Member Card
+// MARK: - Cast Member Card (Hotstar Style)
 struct CastMemberCard: View {
     /// Cast member to display
     let cast: Cast
@@ -42,7 +44,7 @@ struct CastMemberCard: View {
     var body: some View {
         Button(action: onTapped) {
             VStack(spacing: .spacingS) {
-                /// Profile image
+                /// Profile image (circular)
                 if let profileURL = cast.fullProfileURL {
                     AsyncImage(url: profileURL) { image in
                         image
@@ -50,42 +52,41 @@ struct CastMemberCard: View {
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
                         ZStack {
-                            Color.surfaceBackground
+                            Color.cardBackground
                             ProgressView()
-                                .tint(.primaryBlue)
+                                .tint(.textTertiary)
                         }
                     }
-                    .frame(width: 100, height: 100)
+                    .frame(width: 80, height: 80)
                     .clipShape(Circle())
                 } else {
                     /// Placeholder
                     ZStack {
-                        Color.surfaceBackground
+                        Color.cardBackground
                         Image(systemName: "person.fill")
-                            .font(.title)
-                            .foregroundColor(Color.textTertiary)
+                            .font(.headlineLarge)
+                            .foregroundColor(.textTertiary)
                     }
-                    .frame(width: 100, height: 100)
+                    .frame(width: 80, height: 80)
                     .clipShape(Circle())
                 }
                 
                 /// Name
                 Text(cast.name)
-                    .font(.captionLarge)
-                    .fontWeight(.medium)
-                    .foregroundColor(Color.textPrimary)
+                    .font(.labelSmall)
+                    .foregroundColor(.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                 
                 /// Role
                 if let role = cast.displayRole {
                     Text(role)
-                        .font(.captionMedium)
-                        .foregroundColor(Color.textSecondary)
+                        .font(.captionLarge)
+                        .foregroundColor(.textSecondary)
                         .lineLimit(1)
                 }
             }
-            .frame(width: 100)
+            .frame(width: 80)
         }
         .buttonStyle(PlainButtonStyle())
     }

@@ -16,7 +16,7 @@ struct NoResultsView: View {
                 .foregroundColor(.textSecondary)
             
             /// Title
-            Text("no_results.title")
+            Text("search.no_results.title")
                 .font(.headlineLarge)
                 .fontWeight(.semibold)
                 .foregroundColor(.textPrimary)
@@ -29,7 +29,7 @@ struct NoResultsView: View {
                 .padding(.horizontal, .spacingXXL)
             
             /// Suggestion
-            Text("no_results.suggestion")
+            Text("search.no_results.suggestion")
                 .font(.captionLarge)
                 .foregroundColor(.textSecondary)
                 .padding(.top, .spacingS)
